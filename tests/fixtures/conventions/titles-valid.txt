@@ -11,6 +11,6 @@ fix(hooks)!: block every helm uninstall
 # revert is a listed type, so a Conventional Commits revert title is valid.
 revert(ci): drop the lychee fragment check
 # Shell injection: valid as literal text. If make or a shell expanded it, the
-# summary would become "Add it" and fail subject-case.
-feat(ci): $(echo Add) it
-feat(ci): $(shell echo Add) it
+# summary would end in "." and fail subject-full-stop.
+feat(ci): add it$(echo .)
+feat(ci): add it$(shell echo .)

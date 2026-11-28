@@ -1,4 +1,4 @@
 # Titles passed as `make check-title TITLE=...` on the command line. Make must
 # not expand $(shell ...): as literal text this passes, but if make ran it the
-# summary would become "Add it" and fail subject-case.
-feat(ci): $(shell echo Add) it
+# summary would end in "." and fail subject-full-stop.
+feat(ci): add it$(shell echo .)

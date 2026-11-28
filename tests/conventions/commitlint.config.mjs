@@ -24,12 +24,13 @@ export default {
   // commitlint skips merge, revert, fixup! and squash! messages by default.
   // A PR title becomes the squash commit, so none of them is exempt.
   defaultIgnores: false,
-  // The preset's header pattern, except the summary must start right after
-  // one space and not with a digit (ADR-0007: it starts with a lowercase
-  // letter; subject-case covers uppercase). "feat(ci):  x" and "feat(ci): 2
-  // charts" do not parse, so type-empty fails.
+  // The preset's header pattern, except the summary must start with an ASCII
+  // letter right after one space. ADR-0007: it starts with a lowercase letter.
+  // Anything else ("feat(ci):  x", "2 charts", "-add x", "_add x") does not
+  // parse, so type-empty fails. Uppercase letters still parse, so an
+  // uppercase-first summary fails subject-case and is reported by that name.
   parserPreset: {
-    parserOpts: { headerPattern: /^(\w*)(?:\((.*)\))?!?: ([^\s\d].*)$/ },
+    parserOpts: { headerPattern: /^(\w*)(?:\((.*)\))?!?: ([a-zA-Z].*)$/ },
   },
   helpUrl: "docs/adr/0007-conventional-commits-and-branches.md",
   rules: {
