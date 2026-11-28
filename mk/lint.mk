@@ -204,6 +204,11 @@ $(NODE_STAMP): $(CONVENTIONS_DIR)/package.json $(CONVENTIONS_DIR)/package-lock.j
 	@cd $(CONVENTIONS_DIR) && $(UV_RUN) npm ci --ignore-scripts --no-audit --no-fund --loglevel=error
 	@touch $@
 
+# Make expands a recursive variable when it exports it, so a command-line
+# TITLE='$(shell ...)' would run. $(value ...) takes the raw text, and := keeps
+# it unexpanded; override applies it to command-line values too.
+override TITLE  := $(value TITLE)
+override BRANCH := $(value BRANCH)
 export TITLE BRANCH
 
 check-title: node-deps
@@ -256,6 +261,7 @@ test-fixtures: node-deps check-lychee
 	@echo "==> fixtures: titles (commitlint)"
 	@$(EXPECT) title pass $(FIXTURES)/titles-valid.txt
 	@$(EXPECT) title fail $(FIXTURES)/titles-invalid.txt
+	@$(EXPECT) title-arg pass $(FIXTURES)/titles-make-args.txt
 	@echo "==> fixtures: branches (branch-name-lint)"
 	@$(EXPECT) branch pass $(FIXTURES)/branches-valid.txt
 	@$(EXPECT) branch fail $(FIXTURES)/branches-invalid.txt

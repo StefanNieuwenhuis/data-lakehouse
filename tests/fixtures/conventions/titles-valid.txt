@@ -8,6 +8,9 @@ refactor(tools): split board.sh lookups
 # `!` form: breaking change, `!` right after the scope.
 feat(catalog)!: drop the legacy warehouse
 fix(hooks)!: block every helm uninstall
+# revert is a listed type, so a Conventional Commits revert title is valid.
+revert(ci): drop the lychee fragment check
 # Shell injection: valid as literal text. If make or a shell expanded it, the
 # summary would become "Add it" and fail subject-case.
 feat(ci): $(echo Add) it
+feat(ci): $(shell echo Add) it

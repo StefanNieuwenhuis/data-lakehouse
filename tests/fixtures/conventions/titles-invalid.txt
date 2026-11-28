@@ -19,6 +19,14 @@
 [type-empty] feat(storage):  add a chart
 [type-empty] feat(storage)  add a chart
 [type-empty] add a chart
+# Summary starting with a digit (ADR-0007: starts with a lowercase letter).
+[type-empty] feat(storage): 2 charts for the catalog
+# commitlint's default ignores are off: git's merge, revert, fixup! and
+# squash! messages are not exempt.
+[type-empty] Revert "feat(ci): x"
+[type-empty] Merge branch 'main' into feat/1-x
+[type-empty] fixup! feat(ci): add x
+[type-empty] squash! feat(ci): add x
 # Leading whitespace, and an empty summary.
 [header-trim]  feat(storage): add a chart
 [subject-empty] feat(storage):

@@ -21,11 +21,17 @@ export default {
   // enforces "the summary starts lowercase": it rejects "Add x" and
   // "SeaweedFS chart" but accepts "add SeaweedFS chart".
   extends: ["@commitlint/config-conventional"],
+  // commitlint skips merge, revert, fixup! and squash! messages by default.
+  // A PR title becomes the squash commit, so none of them is exempt.
+  defaultIgnores: false,
   // The preset's header pattern, except the summary must start right after
-  // one space: "feat(ci):  x" does not parse, so type-empty fails.
+  // one space and not with a digit (ADR-0007: it starts with a lowercase
+  // letter; subject-case covers uppercase). "feat(ci):  x" and "feat(ci): 2
+  // charts" do not parse, so type-empty fails.
   parserPreset: {
-    parserOpts: { headerPattern: /^(\w*)(?:\((.*)\))?!?: (\S.*)$/ },
+    parserOpts: { headerPattern: /^(\w*)(?:\((.*)\))?!?: ([^\s\d].*)$/ },
   },
+  helpUrl: "docs/adr/0007-conventional-commits-and-branches.md",
   rules: {
     "type-enum": [2, "always", types],
     "type-empty": [2, "never"],
