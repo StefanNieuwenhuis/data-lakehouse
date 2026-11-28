@@ -1,0 +1,13 @@
+# PR titles commitlint must accept (make check-title). One per line.
+feat(storage): add SeaweedFS wrapper chart deployed by make deploy
+fix(hooks): fail closed when the guard cannot parse a command
+docs(adr): record the Trino catalog decision
+ci(ci): enforce conventions, lint Markdown, add issue forms
+chore(deps): bump ruff to 0.17.6
+refactor(tools): split board.sh lookups
+# `!` form: breaking change, `!` right after the scope.
+feat(catalog)!: drop the legacy warehouse
+fix(hooks)!: block every helm uninstall
+# Shell injection: valid as literal text. If make or a shell expanded it, the
+# summary would become "Add it" and fail subject-case.
+feat(ci): $(echo Add) it

@@ -1,0 +1,9 @@
+---
+# A different list file, to prove the lists are read from the file at runtime
+# and not copied into the configs (make test-fixtures, CONVENTIONS_FILE).
+types:
+  - spike
+scopes:
+  - lab
+branch_prefixes:
+  spike: spike/

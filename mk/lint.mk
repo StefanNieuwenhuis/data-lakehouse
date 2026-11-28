@@ -1,6 +1,7 @@
 # mk/lint.mk - owner: test-engineer (ADR-0006).
-# Targets: lint, test, check-conventions, node-deps, install-lychee,
-# install-jq (secrets-scan arrives with #16).
+# Targets: lint, test, test-fixtures, check-conventions (check-title,
+# check-branch), node-deps, install-lychee, install-jq (secrets-scan arrives
+# with #16).
 #
 # Every Python tool runs through `uv run --locked`, with the exact versions
 # pinned in pyproject.toml and uv.lock (ADR-0003), so CI and local runs match.
@@ -12,7 +13,8 @@ UV_RUN := $(UV) run --locked
 
 .PHONY: lint test check-uv lint-yaml lint-python lint-sql lint-shell test-python \
         lint-markdown lint-links lint-links-external check-lychee install-lychee \
-        install-jq check-jq check-conventions node-deps lint-workflows
+        install-jq check-jq check-conventions node-deps lint-workflows \
+        check-title check-branch check-link-file test-fixtures
 
 check-uv:
 	@command -v $(UV) >/dev/null 2>&1 || { \
@@ -177,41 +179,91 @@ check-jq:
 	echo "==> $$v at $$(command -v $(JQ))"
 
 # --- Naming conventions (ADR-0007) -------------------------------------------
-# Validates a PR title (commitlint) and a branch name against
-# docs/conventions.yaml.
+# Validates a PR title and a branch name against docs/conventions.yaml, with
+# two pinned OSS tools and no custom checker:
+#   check-title   commitlint        ($(CONVENTIONS_DIR)/commitlint.config.mjs)
+#   check-branch  branch-name-lint  ($(CONVENTIONS_DIR)/branch-name-lint.config.js)
+# Both configs read the lists from docs/conventions.yaml at runtime.
 #   make check-conventions TITLE='feat(storage): add x' [BRANCH=feat/7-x]
-# BRANCH defaults to the current git branch. TITLE and BRANCH reach the script
-# only through the environment, never through the recipe text, so a hostile
-# title can't inject shell. CI passes them through `env:`.
+# BRANCH defaults to the current git branch. TITLE and BRANCH reach the tools
+# only through the environment ("$$TITLE" in the recipe is a quoted shell
+# variable, never make text), so a hostile title can't inject shell. CI passes
+# them through `env:`.
 #
-# commitlint is pinned in tests/conventions/package.json and package-lock.json
-# (npm verifies each package's integrity hash). Node and npm come from the
-# nodejs-wheel pin in the uv dev group, so there is no separate Node install.
+# The npm packages are pinned in $(CONVENTIONS_DIR)/package.json and
+# package-lock.json (npm verifies each package's integrity hash). Node and npm
+# come from the nodejs-wheel pin in the uv dev group.
 CONVENTIONS_DIR := tests/conventions
 NODE_STAMP      := $(CONVENTIONS_DIR)/node_modules/.package-lock.json
+NODE_BIN        := node_modules/.bin
 
 node-deps: $(NODE_STAMP)
 $(NODE_STAMP): $(CONVENTIONS_DIR)/package.json $(CONVENTIONS_DIR)/package-lock.json
 	@$(MAKE) --no-print-directory check-uv
-	@echo "==> npm ci (commitlint, from $(CONVENTIONS_DIR)/package-lock.json)"
+	@echo "==> npm ci ($(CONVENTIONS_DIR)/package-lock.json)"
 	@cd $(CONVENTIONS_DIR) && $(UV_RUN) npm ci --ignore-scripts --no-audit --no-fund --loglevel=error
 	@touch $@
 
 export TITLE BRANCH
-check-conventions: check-uv node-deps
-	@echo "==> check-conventions (docs/conventions.yaml)"
-	@$(UV_RUN) python tests/conventions/check_conventions.py
+
+check-title: node-deps
+	@if [ -z "$$TITLE" ]; then \
+	  echo "ERROR: TITLE is not set. Usage: make check-conventions TITLE='type(scope): summary' [BRANCH=...]" >&2; exit 2; fi
+	@echo "==> commitlint: $$TITLE"
+	@cd $(CONVENTIONS_DIR) && printf '%s' "$$TITLE" \
+	  | $(UV_RUN) $(NODE_BIN)/commitlint --config commitlint.config.mjs --color=false
+
+check-branch: node-deps
+	@echo "==> branch-name-lint: $${BRANCH:-$$(git rev-parse --abbrev-ref HEAD) (current git branch)}"
+	@cd $(CONVENTIONS_DIR) && $(UV_RUN) $(NODE_BIN)/branch-name-lint branch-name-lint.config.js
+
+# Runs both checks, so one run reports every problem, and fails if either fails.
+check-conventions: node-deps
+	@rc=0; \
+	$(MAKE) --no-print-directory check-title || rc=1; \
+	$(MAKE) --no-print-directory check-branch || rc=1; \
+	if [ $$rc -ne 0 ]; then \
+	  echo "check-conventions: FAILED (rules: docs/adr/0007-conventional-commits-and-branches.md)" >&2; exit 1; fi; \
+	echo "==> check-conventions: passed"
 
 ## test: unit and data tests, plus chart tests.
-test: test-python test-charts
+test: test-python test-fixtures test-charts
 	@echo "==> test: all checks passed"
 
-# tests/ includes tests/tools/ (the tools/board.sh tests, which stub gh on
-# PATH) and tests/conventions/ (check-conventions and lychee fixtures).
+# tests/ includes tests/tools/ (the tools/board.sh tests, which stub gh on PATH).
 # pytest exits 5 when it collects no tests. That is a pass here: the suite is
 # allowed to be empty until the first tests land. Any other non-zero code fails.
-test-python: check-uv node-deps
+test-python: check-uv
 	@echo "==> pytest (testpaths: tests, .claude/hooks/tests)"
 	@$(UV_RUN) pytest; rc=$$?; \
 	if [ $$rc -eq 5 ]; then echo "pytest: no tests collected, treating as pass"; exit 0; fi; \
 	exit $$rc
+
+# One lychee --offline run on one file, with the same flags as lint-links.
+# The file comes through the environment (LINK_FILE), like TITLE and BRANCH.
+check-link-file: check-lychee
+	@if [ -z "$$LINK_FILE" ]; then echo "ERROR: LINK_FILE is not set" >&2; exit 2; fi
+	@$(LYCHEE) $(LYCHEE_FLAGS) --offline "$$LINK_FILE"
+
+# Fixture data files run through the real tools; each case must pass or fail
+# as listed (tests/fixtures/expect.sh). Covers every title, branch and link
+# case of #26, plus an alternative list file to prove the configs read the
+# lists from the file they are given.
+FIXTURES := tests/fixtures/conventions
+EXPECT   := tests/fixtures/expect.sh
+ALT_CONV := CONVENTIONS_FILE=$(CURDIR)/$(FIXTURES)/alt/conventions.yaml
+test-fixtures: node-deps check-lychee
+	@echo "==> fixtures: titles (commitlint)"
+	@$(EXPECT) title pass $(FIXTURES)/titles-valid.txt
+	@$(EXPECT) title fail $(FIXTURES)/titles-invalid.txt
+	@echo "==> fixtures: branches (branch-name-lint)"
+	@$(EXPECT) branch pass $(FIXTURES)/branches-valid.txt
+	@$(EXPECT) branch fail $(FIXTURES)/branches-invalid.txt
+	@echo "==> fixtures: lists come only from the given list file"
+	@$(ALT_CONV) $(EXPECT) title pass $(FIXTURES)/alt/titles-valid.txt
+	@$(ALT_CONV) $(EXPECT) title fail $(FIXTURES)/alt/titles-invalid.txt
+	@$(ALT_CONV) $(EXPECT) branch pass $(FIXTURES)/alt/branches-valid.txt
+	@$(ALT_CONV) $(EXPECT) branch fail $(FIXTURES)/alt/branches-invalid.txt
+	@echo "==> fixtures: internal links (lychee --offline)"
+	@$(EXPECT) link pass $(FIXTURES)/links-valid.txt
+	@$(EXPECT) link fail $(FIXTURES)/links-invalid.txt

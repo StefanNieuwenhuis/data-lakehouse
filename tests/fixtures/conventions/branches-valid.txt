@@ -1,0 +1,12 @@
+# Branches branch-name-lint must accept: "<type> <branch>". The title used is
+# "<type>(ci): fixture", so the prefix must be the one the type maps to.
+feat feat/7-seaweedfs-chart
+fix fix/13-hook-fail-closed
+docs chore/25-conventional-commits-and-branches
+ci chore/26-enforce-conventions-markdown-lint
+chore chore/41-bump-ruff-0-17-6
+build chore/42-pin-helm
+test chore/43-smoke-phase1
+refactor chore/44-split-board-lookups
+perf chore/45-faster-lint
+revert chore/46-revert-chart-bump

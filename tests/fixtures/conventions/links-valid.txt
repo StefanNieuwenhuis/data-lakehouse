@@ -1,0 +1,3 @@
+# Markdown files lychee --offline must accept.
+tests/fixtures/markdown/valid-internal-link.md
+tests/fixtures/markdown/valid-target.md

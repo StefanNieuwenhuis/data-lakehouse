@@ -1,0 +1,3 @@
+# Markdown files lychee --offline must reject: "<text in output> <file>".
+does-not-exist.md tests/fixtures/markdown/broken-internal-link.md
+no-such-heading tests/fixtures/markdown/broken-anchor.md
