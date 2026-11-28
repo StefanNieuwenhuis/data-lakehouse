@@ -1,0 +1,53 @@
+---
+# Naming conventions for issue titles, PR titles, squash commits and branches.
+# Decision and rules: docs/adr/0007-conventional-commits-and-branches.md.
+# This file is the only place these lists live. CLAUDE.md and ADR-0007 link
+# here, and the enforcement checks (#26) read it. Owner: orchestrator.
+#
+# Title format:  <type>(<scope>)[!]: <summary>
+# Branch format: <prefix>/<issue>-<slug>, for example feat/7-seaweedfs-chart
+# (the branch_prefixes values below already include the trailing /).
+
+specs:
+  conventional_commits: "1.0.0"
+  conventional_branch: "1.1.0"
+  conventional_branch_checked: "2026-11-28"
+
+types:
+  - feat
+  - fix
+  - docs
+  - chore
+  - ci
+  - build
+  - test
+  - refactor
+  - perf
+  - revert
+
+scopes:
+  - storage
+  - catalog
+  - compute
+  - ops
+  - cluster
+  - ci
+  - hooks
+  - tools
+  - board
+  - docs
+  - deps
+  - adr
+
+# Title type -> branch prefix. Every type in `types` has exactly one entry.
+branch_prefixes:
+  feat: feat/
+  fix: fix/
+  docs: chore/
+  chore: chore/
+  ci: chore/
+  build: chore/
+  test: chore/
+  refactor: chore/
+  perf: chore/
+  revert: chore/

@@ -29,7 +29,7 @@ Each listed path has exactly one owning agent, defined in `.claude/agents/`. Unl
 | `infra/minikube/`, `charts/`, `mk/cluster.mk`, `mk/deploy.mk`, `scripts/` | platform-engineer: cluster, Helm, networking, storage, catalog, cluster lock |
 | `pipelines/dagster/`, `pipelines/dbt/` | data-engineer: ingestion, assets, dbt models. Read-only kubectl only. |
 | `tests/smoke/`, `Makefile`, `mk/lint.mk`, `mk/helm.mk`, `mk/smoke.mk`, `.github/workflows/ci.yml`, `.claude/hooks/`, `.claude/settings.json`, `pyproject.toml`, `uv.lock` | test-engineer |
-| `docs/adr/`, `docs/architecture.md`, `CLAUDE.md`, `README.md`, `.claude/agents/` (except `orchestrator.md` and `reviewer.md`, which only Stefan changes) | orchestrator: plans, ADRs, issues and process docs; never code, no git writes |
+| `docs/adr/`, `docs/architecture.md`, `docs/conventions.yaml`, `CLAUDE.md`, `README.md`, `.claude/agents/` (except `orchestrator.md` and `reviewer.md`, which only Stefan changes) | orchestrator: plans, ADRs, issues and process docs; never code, no git writes |
 | PR reviews | reviewer: read-only; posts a `Verdict:` and a 5-line summary |
 
 Namespaces: one per layer, all prefixed `lh-` (`lh-storage`, `lh-catalog`, `lh-ops`, later `lh-compute`, `lh-orchestration`, `lh-ai`; [ADR-0006](docs/adr/0006-namespace-minikube-sizing-and-smoke-job.md)). Cross-namespace addresses always use the full DNS name `<svc>.<ns>.svc.cluster.local`. `dev` is only the minikube profile name, not a namespace.
@@ -39,7 +39,7 @@ Namespaces: one per layer, all prefixed `lh-` (`lh-storage`, `lh-catalog`, `lh-o
 `/plan <goal>` → `/implement <issue>` → `/review <pr>` → `/gate <phase>`. Use `/status` for an overview.
 
 - Every piece of work starts from a GitHub issue with acceptance criteria and two labels: `agent:<owner>` (`platform-engineer`, `data-engineer`, `test-engineer` or `orchestrator`) and `phase:N`. Without acceptance criteria, go back to `/plan`.
-- Implementation happens in a worktree at `../lakehouse-wt/<n>-<kebab-title>`, on a branch with the same name. Commits reference `#<n>`. The PR body contains `Closes #<n>`, the acceptance-criteria checklist and the verify output. For `agent:orchestrator` issues, the orchestrator edits and the main session commits, pushes and opens the PR.
+- Implementation happens in a worktree at `../lakehouse-wt/<n>-<slug>`, on branch `<prefix>/<n>-<slug>`. The prefix comes from the issue title's type (see Naming below). Commits reference `#<n>`. The PR title is the issue title. The PR body contains `Closes #<n>`, the acceptance-criteria checklist and the verify output. For `agent:orchestrator` issues, the orchestrator edits and the main session commits, pushes and opens the PR.
 - At most three agents work at the same time.
 - Architectural choices need an ADR (`docs/adr/NNNN-short-title.md`). If no ADR covers a decision, ask; don't decide on your own.
 - Any PR touching `.claude/` or `CLAUDE.md` gets the label `needs-human-read`, and the user reads it in full.
@@ -63,3 +63,19 @@ Namespaces: one per layer, all prefixed `lh-` (`lh-storage`, `lh-catalog`, `lh-o
 - Everything must be reproducible from a clean cluster through `make` targets.
 - dbt models are layered as sources → staging → marts. Every model has a description and unique/not_null tests on its keys. Ingestion is idempotent per partition.
 - Never weaken or delete a check just to make a gate pass.
+
+### Naming
+
+Issue titles, PR titles, squash commits and branch commits use [Conventional Commits 1.0.0](https://www.conventionalcommits.org/en/v1.0.0/): `type(scope): summary`, imperative, starting lowercase, no trailing period. Breaking changes use `!` after the type or scope, or a `BREAKING CHANGE:` footer. Branches use [Conventional Branch](https://conventionalbranch.org/): `<prefix>/<n>-<slug>`, lowercase and hyphen-separated, with only `feat/`, `fix/` or `chore/`. The allowed types, scopes and the type → prefix map live only in [`docs/conventions.yaml`](docs/conventions.yaml). The rationale is in [ADR-0007](docs/adr/0007-conventional-commits-and-branches.md).
+
+Valid titles:
+
+- `feat(storage): add SeaweedFS wrapper chart deployed by make deploy`
+- `fix(hooks): fail closed when the guard cannot parse a command`
+- `docs(adr): record the Trino catalog decision`
+
+Valid branches:
+
+- `feat/7-seaweedfs-chart`
+- `fix/13-hook-fail-closed`
+- `chore/25-conventional-commits-and-branches`

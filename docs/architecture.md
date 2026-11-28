@@ -2,7 +2,7 @@
 
 This document describes the target architecture of the local lakehouse, its components, how they connect, and the delivery phases with their gates. The decisions behind it are in [`docs/adr/`](adr/).
 
-Last updated: 2026-11-28 (Phase 1 planning, amended after the PR #14 review and after spike #3).
+Last updated: 2026-11-28 (Phase 1 planning, amended after the PR #14 review, after spike #3, and for the naming conventions in ADR-0007).
 
 ## Overview
 
@@ -163,7 +163,7 @@ The top-level `Makefile` only includes one file per area (ADR-0006):
 
 ## Ownership and review of process files
 
-- The orchestrator owns the process docs: `docs/adr/`, `docs/architecture.md`, `CLAUDE.md`, `README.md` and `.claude/agents/`. They are not code. The orchestrator can own issues (`agent:orchestrator`). The main session commits, pushes and opens PRs for those issues.
+- The orchestrator owns the process docs: `docs/adr/`, `docs/architecture.md`, `docs/conventions.yaml`, `CLAUDE.md`, `README.md` and `.claude/agents/`. They are not code. The orchestrator can own issues (`agent:orchestrator`). The main session commits, pushes and opens PRs for those issues.
 - test-engineer owns `.claude/hooks/` and `.claude/settings.json`. platform-engineer owns `scripts/`.
 - Any PR that touches `.claude/` or `CLAUDE.md` gets the label **`needs-human-read`**, and the user reviews it in full before it can merge.
 - A hook or settings change always ships in **its own small PR** labelled `needs-human-read`, never in the same PR as the work that needs it. An agent never edits `.claude/settings.json` or `.claude/hooks/` in a PR that benefits from the change.
@@ -175,10 +175,11 @@ At most **three agents** work at the same time. A wave starts when the issues it
 | Wave | Issues (titles abbreviated) | Notes |
 |---|---|---|
 | 1a | 1 toolchain, lint and CI; 3 object-store spike; 4 process docs | No dependencies |
-| 1b | 2 helm-template and kubeconform; 13 hook rules (namespaces, `minikube delete`); 16 gitleaks | All need 1 |
+| 1b | 13 hook rules (namespaces, `minikube delete`), starts first; 2 helm-template and kubeconform; 25 naming conventions (ADR-0007) | All need 1. 25 needs 22 |
 | 1c | 5 cluster (Calico, etcd encryption, namespaces, quotas); 15 secret-leak guards; 18 cluster lock and deploy skeleton (proposed split from 5) | 5 needs 1 and 13, and needs 3 finished with profile `spike` deleted. 15 needs 13. 18 needs 1 |
-| 2 | 6 secrets (SOPS); 8 CNPG operator | 6 needs 5, 15 and 18 |
-| 3 | 7 SeaweedFS chart; 9 Postgres cluster | |
+| 1d | 19 board tooling; 26 naming checks, Markdown lint, issue forms; 23 guardrail wording after 13 | 26 needs 25. 23 needs 13 |
+| 2 | 6 secrets (SOPS); 8 CNPG operator; 16 gitleaks | 6 needs 5, 15 and 18 |
+| 3 | 7 SeaweedFS chart; 9 Postgres cluster; 20 board process docs | 20 needs 19 |
 | 4 | 10 Lakekeeper; 12 smoke gate (in development) | |
 | 5 | 11 bootstrap, then 12's gate run and PR | |
 | 6 | 17 NetworkPolicies | Needs 11 and 12. The gate runs again with policies on |

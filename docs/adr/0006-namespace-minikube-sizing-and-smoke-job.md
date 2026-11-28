@@ -121,10 +121,11 @@ The top-level `Makefile` is thin and includes one file per area, each with one o
 | Wave | Issues |
 |---|---|
 | 1a | 1, 3, 4 |
-| 1b | 2, 13, 16 |
+| 1b | 13 (first), 2, 25 |
 | 1c | 5, 15, 18 |
-| 2 | 6, 8 |
-| 3 | 7, 9 |
+| 1d | 19, 26, 23 |
+| 2 | 6, 8, 16 |
+| 3 | 7, 9, 20 |
 | 4 | 10, with 12 in development |
 | 5 | 11, then 12's gate run |
 | 6 | 17 |
