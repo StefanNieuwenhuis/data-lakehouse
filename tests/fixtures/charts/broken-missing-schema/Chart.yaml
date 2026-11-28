@@ -1,0 +1,8 @@
+---
+# Test fixture for make test-charts (#2). A resource without any schema must fail, not be skipped.
+apiVersion: v2
+name: broken-missing-schema
+description: Custom resource with no schema in either pinned catalog; kubeconform must fail.
+type: application
+version: 0.1.0
+appVersion: "1.0.0"

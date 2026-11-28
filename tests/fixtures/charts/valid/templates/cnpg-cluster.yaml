@@ -1,0 +1,11 @@
+---
+# CRD-backed resource: kubeconform validates it against the pinned
+# datreeio CRDs-catalog schema for postgresql.cnpg.io/v1 Cluster.
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: "{{ .Release.Name }}-pg"
+spec:
+  instances: 1
+  storage:
+    size: 1Gi

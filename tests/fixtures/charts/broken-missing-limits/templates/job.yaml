@@ -1,0 +1,44 @@
+---
+# Schema-valid, but the container sets requests only: the policy must reject it.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: "{{ .Release.Name }}-nolimits"
+spec:
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: run
+          image: "{{ .Values.image }}"
+          command: ["sh", "-c", "true"]
+          resources:
+            requests: {cpu: 10m, memory: 16Mi}
+---
+# Schema-valid, but the init container has no memory limit: the policy must
+# reject it, which shows init containers and CronJob pod templates are covered.
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: "{{ .Release.Name }}-nightly"
+spec:
+  schedule: "0 3 * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: Never
+          initContainers:
+            - name: prepare
+              image: "{{ .Values.image }}"
+              command: ["sh", "-c", "true"]
+              resources:
+                requests: {cpu: 10m, memory: 16Mi}
+                limits: {cpu: 50m}
+          containers:
+            - name: run
+              image: "{{ .Values.image }}"
+              command: ["sh", "-c", "true"]
+              resources:
+                requests: {cpu: 10m, memory: 16Mi}
+                limits: {cpu: 50m, memory: 32Mi}

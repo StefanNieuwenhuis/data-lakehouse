@@ -1,0 +1,8 @@
+---
+# Test fixture for make test-charts (#2). Valid defaults, but values-dev.yaml breaks the schema; kubeconform must fail.
+apiVersion: v2
+name: broken-dev-values
+description: Valid defaults, but values-dev.yaml breaks the schema; kubeconform must fail.
+type: application
+version: 0.1.0
+appVersion: "1.0.0"

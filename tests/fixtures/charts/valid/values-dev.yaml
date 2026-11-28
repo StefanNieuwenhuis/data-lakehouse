@@ -1,0 +1,3 @@
+---
+# Test fixture dev overrides (#2): rendered and validated separately.
+replicas: 2

@@ -1,0 +1,3 @@
+---
+# Breaks only the dev render: replicas becomes a string, so kubeconform fails.
+replicas: two
