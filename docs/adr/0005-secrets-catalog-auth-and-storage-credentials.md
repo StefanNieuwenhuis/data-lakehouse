@@ -4,7 +4,7 @@ Date: 2026-11-28
 
 ## Status
 
-Accepted. Approved by the user on 2026-11-28 as "Accepted (conditional)", amended after the PR #14 review, and confirmed with client conditions by the object-store spike (issue #3) on 2026-11-28. See the amendment at the end: remote signing stays, every PyIceberg client runs with one worker until the lift rule there is met (upstream apache/iceberg-python#4414 fixed in a pinned release, plus 10 clean runs at default workers), and deletes go through Lakekeeper.
+Accepted. Approved by the user on 2026-11-28 as "Accepted (conditional)", amended after the PR #14 review, and confirmed with client conditions by the object-store spike (issue #3) on 2026-11-28. See the amendment at the end: remote signing stays, every PyIceberg client runs with one worker until the lift rule there is met (upstream apache/iceberg-python#4414 fixed in a pinned release, plus 10 consecutive clean round trips at default workers), and deletes go through Lakekeeper.
 
 The original condition was that the object-store spike (ADR-0002) confirms the write-access mechanism, remote signing through PyIceberg's `FsspecFileIO` against SeaweedFS. The secrets and auth decisions weren't affected by the condition.
 
@@ -145,9 +145,9 @@ These apply to every PyIceberg client in this project: the Phase 1 smoke Job now
    - Upstream: [apache/iceberg-python#3896](https://github.com/apache/iceberg-python/issues/3896) (closed by the merged PR [#4405](https://github.com/apache/iceberg-python/pull/4405), "Register the S3 signer on a session instead of a shared client", 2026-11-18, not in 0.12.0), and the related open issue [apache/iceberg-python#4414](https://github.com/apache/iceberg-python/issues/4414) (signer swapped on a shared, cached `S3FileSystem`).
    - When to lift it: only when **both** of these hold:
      1. [apache/iceberg-python#4414](https://github.com/apache/iceberg-python/issues/4414) is fixed in a released PyIceberg version, and we pin that version. #4414 is the gating issue: the merged #4405 isn't enough on its own, because nothing confirms that it resolves #4414;
-     2. 10 consecutive clean `make smoke-phase1` runs pass at default workers (`PYICEBERG_MAX_WORKERS` unset), with the gate otherwise as defined in ADR-0006 and its amendment.
+     2. 10 consecutive clean round trips pass at default workers (two `make smoke-phase1` runs, `PYICEBERG_MAX_WORKERS` unset), with the gate otherwise as defined in ADR-0006 and its amendment.
 
-     Lifting the condition still needs a new amendment to this ADR, which records the pinned version and the 10 runs. A PyIceberg bump on its own keeps the condition in force.
+     Lifting the condition still needs a new amendment to this ADR, which records the pinned version and the 10 round trips. A PyIceberg bump on its own keeps the condition in force.
    - Cost: no parallel scans or writes in PyIceberg. That is negligible at local scale.
 2. **Deletes go through Lakekeeper, not through `FileIO.delete()`.**
    - Why: s3fs deletes with S3 DeleteObjects (`POST ?delete`). Lakekeeper refuses to sign it (`400 DeleteWithoutBody`), because PyIceberg's signer doesn't send the request body.
