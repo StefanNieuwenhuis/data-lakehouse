@@ -432,3 +432,16 @@ def test_usage_error_exits_non_zero(board):
     assert board.run().returncode != 0
     assert board.run("add", "19", "--wave", "1a").returncode != 0
     assert board.run("frobnicate").returncode != 0
+
+
+def test_gh_failure_reason_is_shown(tmp_path):
+    state = copy.deepcopy(BASE_STATE)
+    state["fail"] = {"project field-list": "GraphQL: API rate limit exceeded"}
+    b = Board(tmp_path, state)
+    proc = b.run("move", "19", "Ready")
+    assert_fails(
+        proc,
+        b,
+        "could not list fields of project 5 (owner octo) "
+        "(gh: GraphQL: API rate limit exceeded)",
+    )

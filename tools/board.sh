@@ -79,16 +79,24 @@ check_scope() {
 
 PROJECT_ID=""
 FIELDS_JSON=""
+GH_ERR=""  # temp file for gh's stderr, so errors can quote gh's reason
+
+# gh_reason: prints " (gh: <last stderr line>)" after a failed gh call.
+gh_reason() {
+  local reason=""
+  [ -n "$GH_ERR" ] && reason="$(tail -n 1 "$GH_ERR" 2>/dev/null || true)"
+  [ -z "$reason" ] || printf ' (gh: %s)' "$reason"
+}
 
 load_project() {
   local view
-  if ! view="$(gh project view "$PROJECT" --owner "$OWNER" --format json 2>/dev/null)"; then
-    die "project $PROJECT (owner $OWNER) not found, or not readable with this token"
+  if ! view="$(gh project view "$PROJECT" --owner "$OWNER" --format json 2>"$GH_ERR")"; then
+    die "project $PROJECT (owner $OWNER) not found, or not readable with this token$(gh_reason)"
   fi
   PROJECT_ID="$(printf '%s' "$view" | jq -r '.id // empty')"
   [ -n "$PROJECT_ID" ] || die "project $PROJECT (owner $OWNER) not found: no id in gh project view output"
-  if ! FIELDS_JSON="$(gh project field-list "$PROJECT" --owner "$OWNER" --format json --limit 100 2>/dev/null)"; then
-    die "could not list fields of project $PROJECT (owner $OWNER)"
+  if ! FIELDS_JSON="$(gh project field-list "$PROJECT" --owner "$OWNER" --format json --limit 100 2>"$GH_ERR")"; then
+    die "could not list fields of project $PROJECT (owner $OWNER)$(gh_reason)"
   fi
 }
 
@@ -125,8 +133,8 @@ content_url() {
   case "$number" in
     '' | *[!0-9]*) die "\"$number\" is not an issue or PR number" ;;
   esac
-  if ! url="$(gh api "repos/$REPO/issues/$number" 2>/dev/null | jq -r '.html_url // empty')" || [ -z "$url" ]; then
-    die "issue or PR #$number not found in $REPO"
+  if ! url="$(gh api "repos/$REPO/issues/$number" 2>"$GH_ERR" | jq -r '.html_url // empty')" || [ -z "$url" ]; then
+    die "issue or PR #$number not found in $REPO$(gh_reason)"
   fi
   printf '%s\n' "$url"
 }
@@ -134,8 +142,8 @@ content_url() {
 # item_json <url>: prints the board item for <url> as JSON, or nothing.
 item_json() {
   local url="$1" items
-  if ! items="$(gh project item-list "$PROJECT" --owner "$OWNER" --format json --limit "$LIMIT" 2>/dev/null)"; then
-    die "could not list items of project $PROJECT (owner $OWNER)"
+  if ! items="$(gh project item-list "$PROJECT" --owner "$OWNER" --format json --limit "$LIMIT" 2>"$GH_ERR")"; then
+    die "could not list items of project $PROJECT (owner $OWNER)$(gh_reason)"
   fi
   printf '%s' "$items" | jq -c --arg u "$url" '[.items[] | select(.content.url == $u)][0] // empty'
 }
@@ -145,8 +153,8 @@ set_option() {
   fid="$(field_id "$field")"
   oid="$(option_id "$field" "$option")"
   gh project item-edit --id "$item" --project-id "$PROJECT_ID" \
-    --field-id "$fid" --single-select-option-id "$oid" >/dev/null ||
-    die "could not set $field to \"$option\" on item $item"
+    --field-id "$fid" --single-select-option-id "$oid" >/dev/null 2>"$GH_ERR" ||
+    die "could not set $field to \"$option\" on item $item$(gh_reason)"
 }
 
 validate_status() {
@@ -194,8 +202,8 @@ cmd_add() {
     status="$(printf '%s' "$item" | jq -r '.status // ""')"
     echo "#$number is already on project $PROJECT; updating its card"
   else
-    id="$(gh project item-add "$PROJECT" --owner "$OWNER" --url "$url" --format json | jq -r '.id // empty')" ||
-      die "could not add #$number to project $PROJECT"
+    id="$(gh project item-add "$PROJECT" --owner "$OWNER" --url "$url" --format json 2>"$GH_ERR" | jq -r '.id // empty')" ||
+      die "could not add #$number to project $PROJECT$(gh_reason)"
     [ -n "$id" ] || die "could not add #$number to project $PROJECT: no item id returned"
     status=""
     echo "added #$number to project $PROJECT"
@@ -255,6 +263,8 @@ main() {
     *) echo "board.sh: unknown command \"$cmd\"" >&2; usage ;;
   esac
   check_tools
+  GH_ERR="$(mktemp "${TMPDIR:-/tmp}/board.XXXXXX")"
+  trap 'rm -f "$GH_ERR"' EXIT
   "cmd_$cmd" "$@"
 }
 

@@ -59,6 +59,12 @@ def main():
         fh.write(json.dumps(args) + "\n")
     state = load()
 
+    # "fail": {"project field-list": "GraphQL: API rate limit exceeded"} makes
+    # that subcommand fail with the given stderr message.
+    message = state.get("fail", {}).get(" ".join(args[:2]))
+    if message:
+        fail(message)
+
     if args[:2] == ["auth", "status"]:
         if not state.get("authenticated", True):
             fail("You are not logged into any GitHub hosts.")
