@@ -4,7 +4,9 @@ Date: 2026-11-28
 
 ## Status
 
-Accepted (conditional), approved by the user on 2026-11-28, and amended after the PR #14 review. The condition is that the object-store spike (ADR-0002) confirms the write-access mechanism, remote signing through PyIceberg's `FsspecFileIO` against SeaweedFS. If the spike fails, the fallback below applies by amendment. The secrets and auth decisions aren't affected by the condition.
+Accepted. Approved by the user on 2026-11-28 as "Accepted (conditional)", amended after the PR #14 review, and confirmed with client conditions by the object-store spike (issue #3) on 2026-11-28. See the amendment at the end: remote signing stays, every PyIceberg client runs with one worker until the lift rule there is met (upstream apache/iceberg-python#4414 fixed in a pinned release, plus 10 consecutive clean round trips at default workers), and deletes go through Lakekeeper.
+
+The original condition was that the object-store spike (ADR-0002) confirms the write-access mechanism, remote signing through PyIceberg's `FsspecFileIO` against SeaweedFS. The secrets and auth decisions weren't affected by the condition.
 
 ## Context
 
@@ -123,3 +125,40 @@ The settings and hook changes are test-engineer work and ship in their own small
 - **Static keys in every client** (as the primary approach). Kept as the fallback. It is simpler, but spreads the admin key to every client, and it's a pattern that doesn't carry over to authenticated phases.
 - **Let CNPG or charts generate random passwords.** Rejected: values would change when the cluster is recreated, and Lakekeeper's encryption key must stay in sync with stored data. One source (`.env.dev.sops`) is simpler.
 - **OIDC from Phase 1.** Rejected: an identity provider adds a component and complexity before the core data path works.
+
+## Amendment (2026-11-28, spike #3): remote signing confirmed, with client conditions
+
+Evidence: [spike #3 result](https://github.com/StefanNieuwenhuis/lakehouse/issues/3#issuecomment-7242767101), accepted by the user on 2026-11-28.
+
+### What the spike confirmed
+
+- Lakekeeper 0.15.1 remote signing works against SeaweedFS 4.55 with this warehouse storage profile: `sts-enabled: false`, `remote-signing-enabled: true`, `remote-signing-url-style: path`, `path-style-access: true`, `flavor: s3-compat`. The server accepts only `path` for the URL style, even though its OpenAPI docs say `path-style`.
+- PyIceberg 0.12.0 with `FsspecFileIO` and no S3 keys on the client created a namespace and a table, appended, and read the rows back. The client pod had no S3 environment variables, no `~/.aws` and no credentials in its catalog or table config.
+- **Remote signing stays the write-access mechanism.** The decision under "Storage credentials and client write access" is unchanged, with the two conditions below.
+
+### Conditions for every PyIceberg client
+
+These apply to every PyIceberg client in this project: the Phase 1 smoke Job now, and later ingestion code and Dagster assets.
+
+1. **Run PyIceberg with one worker: `PYICEBERG_MAX_WORKERS=1`** in the pod environment (or `max-workers: 1` in `.pyiceberg.yaml`).
+   - Why: in PyIceberg 0.12.0, `FsspecFileIO` removes and re-adds its remote-signer hook (`before-sign.s3`, `unregister` then `register_last`) on an s3fs client that fsspec's instance cache shares across threads. A request signed in that gap goes out unsigned, because the client is configured as `UNSIGNED`, and the store rejects it with 403. The spike saw this in 3 of 8 runs with default workers, and in 0 of 8 runs with one worker.
+   - Upstream: [apache/iceberg-python#3896](https://github.com/apache/iceberg-python/issues/3896) (closed by the merged PR [#4405](https://github.com/apache/iceberg-python/pull/4405), "Register the S3 signer on a session instead of a shared client", 2026-11-18, not in 0.12.0), and the related open issue [apache/iceberg-python#4414](https://github.com/apache/iceberg-python/issues/4414) (signer swapped on a shared, cached `S3FileSystem`).
+   - When to lift it: only when **both** of these hold:
+     1. [apache/iceberg-python#4414](https://github.com/apache/iceberg-python/issues/4414) is fixed in a released PyIceberg version, and we pin that version. #4414 is the gating issue: the merged #4405 isn't enough on its own, because nothing confirms that it resolves #4414;
+     2. 10 consecutive clean round trips pass at default workers (two `make smoke-phase1` runs, `PYICEBERG_MAX_WORKERS` unset), with the gate otherwise as defined in ADR-0006 and its amendment.
+
+     Lifting the condition still needs a new amendment to this ADR, which records the pinned version and the 10 round trips. A PyIceberg bump on its own keeps the condition in force.
+   - Cost: no parallel scans or writes in PyIceberg. That is negligible at local scale.
+2. **Deletes go through Lakekeeper, not through `FileIO.delete()`.**
+   - Why: s3fs deletes with S3 DeleteObjects (`POST ?delete`). Lakekeeper refuses to sign it (`400 DeleteWithoutBody`), because PyIceberg's signer doesn't send the request body.
+   - Rule: table and file deletion uses Lakekeeper: `purge_table` with the warehouse delete profile `hard`. The smoke Job must clean up this way (#12). Client code doesn't call `FileIO.delete()` or s3fs `rm` on table locations.
+
+### Other findings
+
+- When remote signing is on, Lakekeeper returns `py-io-impl=pyiceberg.io.fsspec.FsspecFileIO` in the table config, and table config overrides client properties. So clients get `FsspecFileIO` even if they don't set it, and they can't switch to PyArrowFileIO while remote signing is on. The smoke test still sets the FileIO explicitly.
+- Trino (Phase 2) isn't affected by these PyIceberg-specific conditions. Its remote signing is checked at its own gate.
+
+### Static-key fallback
+
+- The fallback was verified: a second warehouse with remote signing disabled, PyArrowFileIO, and the key pair through `secretKeyRef`, passed 5 of 5 runs with default workers.
+- It stays the **documented fallback, used only by amendment** to this ADR. It isn't enabled because of the conditions above. Switching to it needs `remote-signing-enabled: false` on the warehouse (see "Other findings"), and extends the secret placement table with the client namespaces that would get the key pair.

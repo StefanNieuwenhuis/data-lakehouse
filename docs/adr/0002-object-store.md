@@ -4,7 +4,9 @@ Date: 2026-11-28
 
 ## Status
 
-Accepted (conditional), approved by the user on 2026-11-28. The condition is that the Phase 1 object-store spike shows SeaweedFS's S3 gateway works with Lakekeeper and PyIceberg, as described under Decision. If the spike fails, it proposes an amendment, and Garage becomes the next candidate.
+Accepted. Approved by the user on 2026-11-28 as "Accepted (conditional)", and confirmed by the object-store spike (issue #3) on 2026-11-28. See the amendment at the end.
+
+The original condition was that the Phase 1 object-store spike shows SeaweedFS's S3 gateway works with Lakekeeper and PyIceberg, as described under Decision. If the spike had failed, it would have proposed an amendment, with Garage as the next candidate.
 
 ## Context
 
@@ -44,3 +46,16 @@ Verified on 2026-11-28 (`helm search repo`, `docker buildx imagetools inspect`):
 - **Garage.** A light, S3-compatible store with arm64 images. Kept as the **fallback** if the SeaweedFS spike fails. It has no IAM or STS and only limited S3 API coverage, and it has less ecosystem testing with Iceberg tooling.
 - **Ceph RGW (Rook).** Rejected: too heavy for a single-node minikube with the memory budget in ADR-0006.
 - **MinIO AIStor (commercial).** Rejected: license and cost are out of scope for a local learning lakehouse.
+
+## Amendment (2026-11-28, spike #3): confirmed
+
+Evidence: [spike #3 result](https://github.com/StefanNieuwenhuis/lakehouse/issues/3#issuecomment-7242767101), accepted by the user on 2026-11-28.
+
+- Against SeaweedFS 4.55 (chart 4.55.0, the ADR-0003 digest) in profile `spike`, with static keys, path-style addressing and SigV4, the spike showed:
+  - idempotent bucket create, and put, get, list and delete of objects;
+  - multipart upload (3 parts, sha256 verified), also through remote signing (3 parts of a 120 MiB object);
+  - rejection of wrong-secret requests (`SignatureDoesNotMatch`) and anonymous requests (`AccessDenied`).
+- Lakekeeper 0.15.1 remote signing works against SeaweedFS. PyIceberg wrote and read Parquet data files through it (ADR-0005, amendment of the same date).
+- All four spike conditions under Decision are met. The status changes from "Accepted (conditional)" to "Accepted".
+- The problems the spike found are in the PyIceberg 0.12.0 client, not in SeaweedFS, and would follow us to any S3 store. They are handled in ADR-0005. A Garage spike isn't needed, and Garage stays an unexercised alternative.
+- Chart-level findings (the unpinned `alpine/k8s` image in `volume.resizeHook`, and keeping the default log level so the S3 access key ID isn't logged) are implementation details for the SeaweedFS chart issue (#7), not changes to this decision.
