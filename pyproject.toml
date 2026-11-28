@@ -11,7 +11,6 @@ dependencies = []
 dev = [
     "actionlint-py==1.7.12.25",
     "check-jsonschema==0.39.0",
-    "conventional-pre-commit==4.5.0",
     # Node and npm for commitlint and branch-name-lint (tests/conventions/package-lock.json).
     "nodejs-wheel==24.19.0",
     "pymarkdownlnt==0.9.42",
