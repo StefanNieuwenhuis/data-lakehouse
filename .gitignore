@@ -28,3 +28,9 @@ graphify-out/*
 !graphify-out/GRAPH_REPORT.md
 !graphify-out/graph.html
 !graphify-out/graph.json
+
+# Helm chart dependencies, rebuilt by `helm dependency build` (ADR-0003)
+charts/*/charts/*.tgz
+
+# Pinned binary tools and schema cache fetched by mk/helm.mk (#2)
+.tools/
