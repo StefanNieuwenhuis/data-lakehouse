@@ -1,0 +1,67 @@
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install linters
+        run: pip install yamllint ruff sqlfluff
+
+      - name: make lint
+        run: make lint
+
+  helm-template:
+    name: helm-template
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: azure/setup-helm@v4
+        with:
+          version: v4.3.1  # keep in sync with the local Helm version
+
+      - name: Lint and render every chart
+        shell: bash
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          charts=(charts/*/Chart.yaml)
+          if [ ${#charts[@]} -eq 0 ]; then
+            echo "::notice::No charts in charts/ yet, nothing to template."
+            exit 0
+          fi
+          for chart_yaml in "${charts[@]}"; do
+            chart=$(dirname "$chart_yaml")
+            echo "::group::$chart"
+            if grep -q '^dependencies:' "$chart_yaml"; then
+              helm dependency build "$chart"
+            fi
+            helm lint "$chart"
+            helm template ci "$chart" > /dev/null
+            # Also render each environment overlay, e.g. values-dev.yaml.
+            for values in "$chart"/values-*.yaml; do
+              echo "rendering with $values"
+              helm lint "$chart" -f "$values"
+              helm template ci "$chart" -f "$values" > /dev/null
+            done
+            echo "::endgroup::"
+          done
