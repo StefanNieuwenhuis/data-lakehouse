@@ -31,6 +31,7 @@ CHAINED = [
     "echo start\n{cmd}",
     "(cd /tmp && {cmd})",
     "echo $({cmd})",
+]
 
 
 class GuardTestCase(unittest.TestCase):

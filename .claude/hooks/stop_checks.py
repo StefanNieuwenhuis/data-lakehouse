@@ -35,7 +35,7 @@ def project_root(cwd):
             capture_output=True,
             text=True,
             timeout=5,
-check=True,
+            check=True,
         ).stdout.strip()
     except (OSError, subprocess.SubprocessError) as exc:
         warn(f"git rev-parse failed ({exc}); using {cwd} as the project root")
