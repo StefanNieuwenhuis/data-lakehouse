@@ -9,6 +9,7 @@
 #                                  prove make does not expand $(...) in it
 #   branch  make check-branch      TITLE, BRANCH          (branch-name-lint)
 #   link    make check-link-file   LINK_FILE=<case>       (lychee --offline)
+#   lockfile make check-lockfile   LOCKFILE=<case>        (lockfile-lint)
 #
 # Case lines (blank lines and lines starting with # are skipped):
 #   pass files:  <case>
@@ -19,7 +20,7 @@
 # Inputs reach make only through the environment.
 set -uo pipefail
 
-kind=${1:?kind: title, title-arg, branch or link}
+kind=${1:?kind: title, title-arg, branch, link or lockfile}
 want=${2:?want: pass or fail}
 file=${3:?cases file}
 [[ $want == pass || $want == fail ]] || { echo "expect.sh: want must be pass or fail" >&2; exit 2; }
@@ -41,6 +42,7 @@ while IFS= read -r line || [[ -n $line ]]; do
     branch) out=$(TITLE="${line%% *}(ci): fixture" BRANCH=${line#* } \
                   "$MAKE" -s --no-print-directory check-branch 2>&1) ;;
     link)   out=$(LINK_FILE=$line "$MAKE" -s --no-print-directory check-link-file 2>&1) ;;
+    lockfile) out=$(LOCKFILE=$PWD/$line "$MAKE" -s --no-print-directory check-lockfile 2>&1) ;;
     *) echo "expect.sh: unknown kind: $kind" >&2; exit 2 ;;
   esac
   rc=$?

@@ -1,0 +1,3 @@
+# npm lockfiles lockfile-lint must accept (make check-lockfile).
+tests/fixtures/lockfiles/public-npm/package-lock.json
+tests/conventions/package-lock.json

@@ -14,7 +14,7 @@ UV_RUN := $(UV) run --locked
 .PHONY: lint test check-uv lint-yaml lint-python lint-sql lint-shell test-python \
         lint-markdown lint-links lint-links-external check-lychee install-lychee \
         install-jq check-jq check-conventions node-deps lint-workflows \
-        check-title check-branch check-link-file test-fixtures
+        check-title check-branch check-link-file test-fixtures lint-lockfile check-lockfile
 
 check-uv:
 	@command -v $(UV) >/dev/null 2>&1 || { \
@@ -22,7 +22,7 @@ check-uv:
 	  exit 1; }
 
 ## lint: every linter; fails on the first one that reports a problem.
-lint: lint-yaml lint-python lint-sql lint-shell lint-markdown lint-links lint-workflows lint-charts
+lint: lint-yaml lint-python lint-sql lint-shell lint-markdown lint-links lint-workflows lint-lockfile lint-charts
 	@echo "==> lint: all checks passed"
 
 lint-yaml: check-uv
@@ -222,6 +222,22 @@ check-branch: node-deps
 	@echo "==> branch-name-lint: $${BRANCH:-$$(git rev-parse --abbrev-ref HEAD) (current git branch)}"
 	@cd $(CONVENTIONS_DIR) && $(UV_RUN) $(NODE_BIN)/branch-name-lint branch-name-lint.config.js
 
+# lockfile-lint (pinned in package.json): every package must come from the
+# public npm registry over https, with an integrity hash and a URL that
+# matches its name. A local npm config with another registry still works for
+# `npm ci`: npm's default replace-registry-host=npmjs swaps the host at fetch
+# time, and the integrity hash pins the bytes.
+LOCKFILE_LINT_FLAGS := --type npm --allowed-hosts npm --validate-https \
+                       --validate-integrity --validate-package-names
+lint-lockfile: node-deps
+	@echo "==> lockfile-lint ($(CONVENTIONS_DIR)/package-lock.json)"
+	@LOCKFILE=$(CURDIR)/$(CONVENTIONS_DIR)/package-lock.json $(MAKE) --no-print-directory check-lockfile
+
+# One lockfile-lint run; the path comes through the environment (LOCKFILE).
+check-lockfile: node-deps
+	@if [ -z "$$LOCKFILE" ]; then echo "ERROR: LOCKFILE is not set" >&2; exit 2; fi
+	@cd $(CONVENTIONS_DIR) && $(UV_RUN) $(NODE_BIN)/lockfile-lint --path "$$LOCKFILE" $(LOCKFILE_LINT_FLAGS)
+
 # Runs both checks, so one run reports every problem, and fails if either fails.
 check-conventions: node-deps
 	@rc=0; \
@@ -273,3 +289,6 @@ test-fixtures: node-deps check-lychee
 	@echo "==> fixtures: internal links (lychee --offline)"
 	@$(EXPECT) link pass $(FIXTURES)/links-valid.txt
 	@$(EXPECT) link fail $(FIXTURES)/links-invalid.txt
+	@echo "==> fixtures: npm lockfiles (lockfile-lint)"
+	@$(EXPECT) lockfile pass $(FIXTURES)/lockfiles-valid.txt
+	@$(EXPECT) lockfile fail $(FIXTURES)/lockfiles-invalid.txt

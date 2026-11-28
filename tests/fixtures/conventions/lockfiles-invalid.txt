@@ -1,0 +1,5 @@
+# npm lockfiles lockfile-lint must reject: "<text in output> <file>".
+# A package resolved through another registry host (made-up .invalid host).
+npm.example.invalid tests/fixtures/lockfiles/foreign-host/package-lock.json
+# A package fetched over plain http.
+http: tests/fixtures/lockfiles/plain-http/package-lock.json
