@@ -73,9 +73,22 @@ BASE_STATE = {
     "items": [],
 }
 
-pytestmark = pytest.mark.skipif(
-    BASH is None or JQ is None, reason="bash and jq are required"
-)
+# Fail, never skip, when a required tool is missing (issue #26): a CI image
+# without jq must not turn this suite green by skipping it.
+# test_missing_jq_fails_clearly still works: it hides jq through its own PATH.
+_INSTALL_HINTS = {
+    "bash": "install bash with your package manager",
+    "jq": "run `make install-jq` (pinned jq into ~/.local/bin), or install jq with your package manager",
+}
+_MISSING = [name for name, path in (("bash", BASH), ("jq", JQ)) if path is None]
+if _MISSING:
+    pytest.fail(
+        "tools/board.sh tests: required tool(s) not on PATH: "
+        + ", ".join(_MISSING)
+        + ". "
+        + "; ".join(f"{n}: {_INSTALL_HINTS[n]}" for n in _MISSING),
+        pytrace=False,
+    )
 
 
 class Board:

@@ -1,0 +1,30 @@
+---
+# External links in Markdown (#26). Weekly and on demand only: never on PRs
+# and not a required check, because remote sites fail for reasons a PR can't
+# fix. Internal links are checked offline by `make lint` on every PR.
+name: links-external
+
+on:
+  schedule:
+    - cron: "17 6 * * 1"  # Mondays 06:17 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  links-external:
+    name: links-external
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+
+      # Fetches lychee by exact version into .tools/bin and checks its sha256
+      # (tests/charts/ensure_tool.sh, pins in mk/lint.mk).
+      - name: make lint-links-external
+        env:
+          # Read-only token, so lychee is not rate-limited on github.com links.
+          GITHUB_TOKEN: ${{ github.token }}
+        run: make lint-links-external

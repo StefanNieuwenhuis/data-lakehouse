@@ -14,11 +14,12 @@ concurrency:
   cancel-in-progress: true
 
 # CI only calls make targets (ADR-0003). Every action is pinned to a full
-# commit SHA, with its release tag in the trailing comment.
+# commit SHA, with its release tag in the trailing comment. Runner images are
+# pinned too (never ubuntu-latest). Each check has its own job.
 jobs:
   lint:
     name: lint
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
@@ -32,15 +33,41 @@ jobs:
       - name: Install pinned toolchain from uv.lock
         run: uv sync --frozen
 
+      # make lint fetches lychee by exact version into .tools/bin and checks
+      # its sha256 (tests/charts/ensure_tool.sh, pins in mk/lint.mk).
       - name: make lint
         run: make lint
+
+  test:
+    name: test
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: astral-sh/setup-uv@1db35dd8eee11c5894872e0b383ae6c406cf738d  # v10.4.0
+        with:
+          # Keep in sync with [tool.uv] required-version in pyproject.toml.
+          version: "0.11.6"
+
+      - name: Install pinned toolchain from uv.lock
+        run: uv sync --frozen
+
+      # jq and lychee by exact version, sha256-verified, into .tools/bin
+      # (tests/charts/ensure_tool.sh, pins in mk/lint.mk). The image's jq is
+      # a different version, so the pinned one is fetched, and make test puts
+      # .tools/bin first on PATH. make test would do this too; the separate
+      # step shows the versions in the log.
+      - name: make check-jq check-lychee
+        run: make check-jq check-lychee
 
       - name: make test
         run: make test
 
   helm-template:
     name: helm-template
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:

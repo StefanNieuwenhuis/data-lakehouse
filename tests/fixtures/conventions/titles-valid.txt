@@ -1,0 +1,16 @@
+# PR titles commitlint must accept (make check-title). One per line.
+feat(storage): add SeaweedFS wrapper chart deployed by make deploy
+fix(hooks): fail closed when the guard cannot parse a command
+docs(adr): record the Trino catalog decision
+ci(ci): enforce conventions, lint Markdown, add issue forms
+chore(deps): bump ruff to 0.17.6
+refactor(tools): split board.sh lookups
+# `!` form: breaking change, `!` right after the scope.
+feat(catalog)!: drop the legacy warehouse
+fix(hooks)!: block every helm uninstall
+# revert is a listed type, so a Conventional Commits revert title is valid.
+revert(ci): drop the lychee fragment check
+# Shell injection: valid as literal text. If make or a shell expanded it, the
+# summary would end in "." and fail subject-full-stop.
+feat(ci): add it$(echo .)
+feat(ci): add it$(shell echo .)

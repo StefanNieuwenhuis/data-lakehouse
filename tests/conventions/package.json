@@ -1,0 +1,15 @@
+{
+  "name": "lakehouse-conventions",
+  "private": true,
+  "description": "Pinned commitlint and branch-name-lint for make check-conventions (issue #26). Node comes from the nodejs-wheel pin in pyproject.toml.",
+  "type": "module",
+  "devDependencies": {
+    "@commitlint/cli": "21.2.4",
+    "@commitlint/config-conventional": "21.2.4",
+    "branch-name-lint": "3.0.1",
+    "conventional-changelog-conventionalcommits": "10.4.1",
+    "conventional-commits-parser": "7.1.4",
+    "lockfile-lint": "5.1.0",
+    "yaml": "2.9.1"
+  }
+}

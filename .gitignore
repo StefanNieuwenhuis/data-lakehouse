@@ -26,6 +26,9 @@ htmlcov/
 # Graphify output (generated locally, not tracked)
 graphify-out/
 
+# Node packages for commitlint (tests/conventions/package-lock.json)
+node_modules/
+
 # Helm chart dependencies, rebuilt by `helm dependency build` (ADR-0003)
 charts/*/charts/*.tgz
 

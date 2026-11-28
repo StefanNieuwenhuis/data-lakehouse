@@ -1,0 +1,3 @@
+# Valid under docs/conventions.yaml, rejected under alt/conventions.yaml.
+[type-enum] feat(lab): add a chart
+[scope-enum] spike(storage): try a thing

@@ -52,6 +52,7 @@ There is one source (`.env.dev.sops`), and each value is applied only where it i
 | (none) | `lh-ops` | CNPG operator, smoke Job | The operator needs no application credentials (superuser access disabled, ADR-0004). The smoke Job uses remote signing |
 
 The Lakekeeper Deployment itself doesn't mount the S3 key pair. After bootstrap, Lakekeeper reads the storage credential from Postgres. No namespace other than those listed gets a key, and later phases extend this table through an amendment.
+
 - `make deploy` runs `make secrets` first, so `make cluster-up deploy` works on a clean checkout.
 - Rotation is out of scope. Losing `.env.dev.sops` or the age key while the cluster has data is documented as destructive (Postgres and Lakekeeper would be locked out). The recovery is `minikube delete` and a fresh `make cluster-up deploy`. The user backs up the age key.
 

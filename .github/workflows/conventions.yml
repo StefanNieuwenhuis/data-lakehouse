@@ -1,0 +1,43 @@
+---
+# PR title and branch name against docs/conventions.yaml (ADR-0007, #26).
+# A separate workflow, so editing a PR title re-runs only this check, not
+# lint, test and helm-template.
+#
+# Security: `pull_request` only (never pull_request_target), read-only token,
+# no third-party actions. The title and branch reach make only through env:,
+# never interpolated into a run: script.
+name: conventions
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: conventions-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  conventions:
+    name: conventions
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: astral-sh/setup-uv@1db35dd8eee11c5894872e0b383ae6c406cf738d  # v10.4.0
+        with:
+          # Keep in sync with [tool.uv] required-version in pyproject.toml.
+          version: "0.11.6"
+
+      - name: Install pinned toolchain from uv.lock
+        run: uv sync --frozen
+
+      - name: make check-conventions
+        env:
+          TITLE: ${{ github.event.pull_request.title }}
+          BRANCH: ${{ github.head_ref }}
+        run: make check-conventions

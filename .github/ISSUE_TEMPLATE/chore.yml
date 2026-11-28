@@ -1,0 +1,57 @@
+---
+# Issue form (issue #26). The fields are what /plan and /implement need.
+# Title format and the allowed types and scopes: docs/conventions.yaml
+# (ADR-0007). Checked by `make lint-workflows` (check-jsonschema).
+name: Chore
+description: Any other type in docs/conventions.yaml (docs, ci, test, ...), on branch prefix chore/.
+title: "type(scope): "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Title: `type(scope): summary`, imperative, lowercase first, no trailing period.
+        Types and scopes: `docs/conventions.yaml`. The branch prefix follows from the type.
+        After filing, add the `agent:<owner>` and `phase:N` labels.
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: Why this work is needed, what it depends on, and links to ADRs or issues.
+    validations:
+      required: true
+  - type: textarea
+    id: task
+    attributes:
+      label: Task
+      description: What to build or change, and what is out of scope.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance-criteria
+    attributes:
+      label: Acceptance criteria
+      description: One checkbox per criterion. Each maps to at least one automated check.
+      value: |
+        - [ ]
+    validations:
+      required: true
+  - type: textarea
+    id: verify-commands
+    attributes:
+      label: Verify commands
+      description: The commands that prove the criteria, for example `make lint`, `make test` or `make smoke-phase1`.
+      render: shell
+    validations:
+      required: true
+  - type: dropdown
+    id: suggested-agent
+    attributes:
+      label: Suggested agent
+      description: The owning agent (CLAUDE.md, Layout and ownership). Add the matching `agent:*` label.
+      options:
+        - platform-engineer
+        - data-engineer
+        - test-engineer
+        - orchestrator
+    validations:
+      required: true

@@ -1,0 +1,25 @@
+# Branches branch-name-lint must reject: "<message> <type> <branch>".
+# Unknown prefix, and a type name that is not a prefix.
+[branch-prefix] feat feature/7-chart
+[branch-prefix] docs docs/9-tidy
+[branch-prefix] ci ci/9-tidy
+# Prefix not matching the title's type.
+[branch-prefix] ci feat/26-enforce-conventions
+[branch-prefix] fix chore/13-fail-closed
+[branch-prefix] feat fix/7-chart
+# Uppercase.
+[branch-slug] feat feat/7-SeaweedFS-chart
+[branch-slug] feat Feat/7-chart
+# Double hyphen, trailing hyphen, leading hyphen.
+[branch-slug] feat feat/7-seaweedfs--chart
+[branch-slug] feat feat/7-seaweedfs-chart-
+[branch-slug] feat feat/-7-chart
+# No issue number, no slug, leading zero, dot (ADR-0007), underscore, nested.
+[branch-slug] feat feat/chart
+[branch-slug] feat feat/7
+[branch-slug] feat feat/07-chart
+[branch-slug] feat feat/7-v1.2-chart
+[branch-slug] feat feat/7_chart
+[branch-slug] feat feat/7-chart/extra
+# No prefix at all.
+[branch-format] feat 7-chart

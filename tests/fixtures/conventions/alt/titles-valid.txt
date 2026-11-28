@@ -1,0 +1,2 @@
+# Valid only under alt/conventions.yaml.
+spike(lab): try a thing

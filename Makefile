@@ -3,7 +3,8 @@
 # targets in the file of the area that owns them (ADR-0006).
 #
 #   File            Owner              Targets
-#   mk/lint.mk      test-engineer      lint, test, secrets-scan
+#   mk/lint.mk      test-engineer      lint, test, check-conventions, check-lychee,
+#                                      check-jq, secrets-scan
 #   mk/helm.mk      test-engineer      helm-template, lint-charts, test-charts
 #   mk/smoke.mk     test-engineer      smoke-phase1 (later smoke-phaseN)
 #   mk/cluster.mk   platform-engineer  cluster-up, cluster-down, verify-etcd-encryption

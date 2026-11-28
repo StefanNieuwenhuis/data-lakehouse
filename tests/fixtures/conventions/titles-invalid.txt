@@ -1,0 +1,38 @@
+# PR titles commitlint must reject: "<rule> <title>". Each title has one defect.
+# Wrong type, and the type in the wrong case.
+[type-enum] feature(storage): add a chart
+[type-enum] style(storage): add a chart
+[type-case] Feat(storage): add a chart
+# Unknown scope, and missing scope.
+[scope-enum] feat(lakehouse): add a chart
+[scope-empty] feat: add a chart
+# Uppercase summary, including a proper noun first (ADR-0007: starts lowercase).
+[subject-case] feat(storage): Add a chart
+[subject-case] feat(storage): SeaweedFS wrapper chart
+# Trailing period.
+[subject-full-stop] feat(storage): add a chart.
+# `!` in the wrong place.
+[type-empty] feat!(storage): add a chart
+[type-empty] feat(storage) !: add a chart
+# Malformed header: no space or two spaces after the colon, no colon, no type.
+[type-empty] feat(storage):add a chart
+[type-empty] feat(storage):  add a chart
+[type-empty] feat(storage)  add a chart
+[type-empty] add a chart
+# Summary starting with a digit or punctuation (ADR-0007: starts with a
+# lowercase letter).
+[type-empty] feat(storage): 2 charts for the catalog
+[type-empty] feat(ci): -add x
+[type-empty] feat(ci): _add x
+[type-empty] feat(ci): "add" x
+# commitlint's default ignores are off: git's merge, revert, fixup! and
+# squash! messages are not exempt.
+[type-empty] Revert "feat(ci): x"
+[type-empty] Merge branch 'main' into feat/1-x
+[type-empty] fixup! feat(ci): add x
+[type-empty] squash! feat(ci): add x
+# A bare version, which commitlint would also skip by default.
+[type-empty] v1.2.3
+# Leading whitespace, and an empty summary.
+[header-trim]  feat(storage): add a chart
+[subject-empty] feat(storage):
