@@ -208,6 +208,9 @@ cmd_add() {
       set_option "$id" Status Ready
       echo "#$number Status: ${status:-none} -> Ready"
       ;;
+    Ready)
+      echo "#$number Status: already Ready"
+      ;;
     *)
       echo "#$number Status: kept \"$status\" (moved by hand; use 'move' to change it)"
       ;;

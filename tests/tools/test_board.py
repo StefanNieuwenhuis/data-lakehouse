@@ -190,6 +190,7 @@ def test_readd_updates_fields_without_duplicate_card(board):
     proc = board.run("add", "19", "--wave", "2", "--agent", "platform-engineer")
     assert proc.returncode == 0, proc.stderr
     assert "already on project 5" in proc.stdout
+    assert "Status: already Ready" in proc.stdout
     card = board.item(19)  # asserts exactly one card
     assert card["values"] == {
         "Wave": "2",
