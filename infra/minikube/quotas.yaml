@@ -1,0 +1,52 @@
+---
+# ResourceQuotas per Phase 1 namespace, numbers from the ADR-0006 table
+# "Resource quotas". Applied by `make cluster-up` after namespaces.yaml.
+# Because limits.* and requests.* are quota'd, every pod in these namespaces
+# must declare CPU and memory requests and limits, or it is rejected.
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: lh-quota
+  namespace: lh-storage
+  labels:
+    app.kubernetes.io/part-of: lakehouse
+spec:
+  hard:
+    limits.cpu: "3"
+    limits.memory: 4608Mi
+    requests.cpu: "2"
+    requests.memory: 3Gi
+    persistentvolumeclaims: "8"
+    requests.storage: 40Gi
+---
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: lh-quota
+  namespace: lh-catalog
+  labels:
+    app.kubernetes.io/part-of: lakehouse
+spec:
+  hard:
+    limits.cpu: "2"
+    limits.memory: 2Gi
+    requests.cpu: "1"
+    requests.memory: 1Gi
+    persistentvolumeclaims: "0"
+    requests.storage: "0"
+---
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: lh-quota
+  namespace: lh-ops
+  labels:
+    app.kubernetes.io/part-of: lakehouse
+spec:
+  hard:
+    limits.cpu: 2500m
+    limits.memory: 2560Mi
+    requests.cpu: "1"
+    requests.memory: 1536Mi
+    persistentvolumeclaims: "0"
+    requests.storage: "0"
