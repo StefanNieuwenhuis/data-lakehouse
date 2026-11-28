@@ -17,7 +17,7 @@ Verified on 2026-11-28 (`helm search repo`, `docker buildx imagetools inspect`):
 
 ## Decision
 
-- Use **SeaweedFS 4.55** (chart `seaweedfs/seaweedfs` 4.55.0) as the S3 object store, wrapped in an in-repo chart, `charts/seaweedfs/` (ADR-0003). It runs in namespace `dev` (ADR-0006).
+- Use **SeaweedFS 4.55** (chart `seaweedfs/seaweedfs` 4.55.0) as the S3 object store, wrapped in an in-repo chart, `charts/seaweedfs/` (ADR-0003). It runs in namespace `lh-storage` (ADR-0006). Its S3 Service is addressed by its full DNS name, `<svc>.lh-storage.svc.cluster.local`.
 - Only the S3 gateway is exposed to other components, through an in-cluster Service. Clients use **path-style** addressing and an explicit endpoint. Virtual-host-style addressing is not used.
 - Access uses static S3 keys (ADR-0005). STS is not used.
 - The resource limit budget for the object store, summed over all its pods (master, volume, filer, s3), is **1 CPU and 2 GiB memory**. Every pod has requests and limits.
