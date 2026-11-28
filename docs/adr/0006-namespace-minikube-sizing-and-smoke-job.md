@@ -4,7 +4,7 @@ Date: 2026-11-28
 
 ## Status
 
-Accepted, amended after the PR #14 review. The namespace-per-layer layout is decided (PR #14 merged). It replaces the earlier single `dev` namespace.
+Accepted, amended after the PR #14 review, and amended for the smoke gate after the object-store spike (issue #3) on 2026-11-28. The namespace-per-layer layout is decided (PR #14 merged). It replaces the earlier single `dev` namespace. See the spike #3 amendment at the end: the smoke Job runs its round trip 5 times in a row with one PyIceberg worker, any 403 fails the gate, there are no retries, and drops go through Lakekeeper.
 
 ## Context
 
@@ -159,3 +159,17 @@ Issue numbers are planning numbers. `docs/architecture.md` maps them to titles. 
 - **A single monolithic Makefile.** Rejected: it creates merge conflicts between owners working in parallel.
 - **`kubectl port-forward` with a host-side Python script.** Rejected: flaky, and endpoints returned by the catalog are in-cluster names, so the host would need different configuration than real clients.
 - **Job image that runs `pip install` at start-up.** Rejected: not reproducible, and it needs network access during the gate.
+
+## Amendment (2026-11-28, spike #3): smoke round trip repeated 5 times, one worker, no retries
+
+Evidence: [spike #3 result](https://github.com/StefanNieuwenhuis/lakehouse/issues/3#issuecomment-7242767101), and the [spike #3 amendment to ADR-0005](0005-secrets-catalog-auth-and-storage-credentials.md#amendment-2026-11-28-spike-3-remote-signing-confirmed-with-client-conditions). The spike saw intermittent 403s from unsigned PyIceberg requests with default workers (3 of 8 runs) and none with one worker (0 of 8 runs). A single round trip per gate run could pass by chance. The user asked for the repeated round trip for the smoke gate (issue #12).
+
+This amends what "Smoke test" says about the script (one create, write, read and drop cycle) and about "Phase 1 done". The rest of the decision is unchanged.
+
+- **Round trip:** each `make smoke-phase1` run executes the round trip described under "Smoke test" (unique namespace and table, deterministic rows, read back and compare, drop) **5 times in a row**, each with its own uniquely named namespace and table.
+- **One worker:** the smoke Job runs with `PYICEBERG_MAX_WORKERS=1` in its pod environment, as ADR-0005's amendment requires for every PyIceberg client.
+- **Any 403 fails the gate:** a 403 from the object store or from Lakekeeper in any of the 5 round trips makes the Job exit non-zero. The script reports which round trip and step failed.
+- **No retries:** neither the script nor the Make target retries a failed step, round trip or Job. A retry would hide the signing race that the repetition is meant to catch.
+- **Drop through Lakekeeper:** each round trip drops its table with `purge_table` (warehouse delete profile `hard`) and then drops its namespace, all through Lakekeeper. The script never calls `FileIO.delete()` or s3fs `rm` (ADR-0005's amendment).
+- **Phase 1 done** is unchanged in shape: from `minikube delete`, `make cluster-up deploy smoke-phase1` passes, a second `make smoke-phase1` also passes, and both runs pass with the NetworkPolicies on. Each of those runs now contains the 5 round trips above.
+- Changing the repeat count, the worker setting or the no-retry rule needs a new amendment to this ADR. Lifting the one-worker condition follows ADR-0005's amendment.
