@@ -59,7 +59,7 @@ jobs:
   # the uv venv, which needs Python 3.12 (issue #13).
   hook-test:
     name: hook-test (python ${{ matrix.python }})
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
