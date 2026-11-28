@@ -226,7 +226,7 @@ def repo_root(cwd):
             capture_output=True,
             text=True,
             timeout=5,
-            check=False,
+check=True,
         ).stdout.strip()
     except (OSError, subprocess.SubprocessError) as exc:
         warn(f"git rev-parse failed ({exc}); using {fallback} as the repo root")
