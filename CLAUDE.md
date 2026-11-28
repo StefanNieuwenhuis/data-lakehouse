@@ -22,14 +22,14 @@ To render a chart the way CI does: `helm template ci charts/<chart> [-f charts/<
 
 ## Layout and ownership
 
-Each path has exactly one owning agent, defined in `.claude/agents/`. Stay inside the owner's area. If a change crosses areas, hand it off.
+Each listed path has exactly one owning agent, defined in `.claude/agents/`. Unlisted paths are owned by Stefan. Stay inside the owner's area. If a change crosses areas, hand it off.
 
 | Path | Owner |
 |---|---|
 | `infra/minikube/`, `charts/`, `mk/cluster.mk`, `mk/deploy.mk`, `scripts/` | platform-engineer: cluster, Helm, networking, storage, catalog, cluster lock |
 | `pipelines/dagster/`, `pipelines/dbt/` | data-engineer: ingestion, assets, dbt models. Read-only kubectl only. |
-| `tests/smoke/`, `Makefile`, `mk/lint.mk`, `mk/helm.mk`, `mk/smoke.mk`, `.github/workflows/ci.yml`, `.claude/hooks/`, `.claude/settings.json` | test-engineer |
-| `docs/adr/`, `docs/architecture.md`, `CLAUDE.md`, `README.md`, `.claude/agents/` | orchestrator: plans, ADRs, issues and process docs; never code, no git writes |
+| `tests/smoke/`, `Makefile`, `mk/lint.mk`, `mk/helm.mk`, `mk/smoke.mk`, `.github/workflows/ci.yml`, `.claude/hooks/`, `.claude/settings.json`, `pyproject.toml`, `uv.lock` | test-engineer |
+| `docs/adr/`, `docs/architecture.md`, `CLAUDE.md`, `README.md`, `.claude/agents/` (except `orchestrator.md` and `reviewer.md`, which only Stefan changes) | orchestrator: plans, ADRs, issues and process docs; never code, no git writes |
 | PR reviews | reviewer: read-only; posts a `Verdict:` and a 5-line summary |
 
 Namespaces: one per layer, all prefixed `lh-` (`lh-storage`, `lh-catalog`, `lh-ops`, later `lh-compute`, `lh-orchestration`, `lh-ai`; [ADR-0006](docs/adr/0006-namespace-minikube-sizing-and-smoke-job.md)). Cross-namespace addresses always use the full DNS name `<svc>.<ns>.svc.cluster.local`. `dev` is only the minikube profile name, not a namespace.
@@ -48,10 +48,10 @@ Namespaces: one per layer, all prefixed `lh-` (`lh-storage`, `lh-catalog`, `lh-o
 
 ## Guardrails (`.claude/settings.json`, `.claude/hooks/`)
 
-- **PreToolUse on Bash** blocks `kubectl delete ns`, pushes to `main`, and `rm -rf` outside the repo or worktree. If it blocks something you really need, ask the user to run it. Don't try to work around the hook.
-- **Planned, not yet enforced (#13, #15):** the hook will allow `helm uninstall` only with `-n lh-[a-z]+`, and `minikube delete` only for profile `spike`. Until #13 merges, don't run either outside those limits. Don't assume the hook blocks them.
+- **PreToolUse on Bash** blocks `kubectl delete ns`, pushes to `main`, `rm -rf` outside the repo or worktree, and every `helm uninstall` not run with `-n dev`. The `-n dev` exception predates ADR-0006; there is no `dev` namespace, so in practice the hook blocks every `helm uninstall` today. If it blocks something you really need, ask the user to run it. Don't try to work around the hook.
+- **Planned, not yet enforced (#13):** the hook will allow `helm uninstall` only in `lh-*` namespaces (`-n lh-[a-z]+`), and `minikube delete` only for profile `spike`. Nothing blocks `minikube delete` today, so don't run it for any other profile.
 - **Secret-leak guards, planned, not yet enforced (#13, #15):** agents never read or print Secrets, `.env*` files or key files (`~/.config/sops/`, `~/.config/lakehouse/`). `make secrets` is the only decryption path; use `make secrets-verify` (digests only) to check them. The hook will be the primary guard, `permissions.deny` a backstop, and CI runs gitleaks (`make secrets-scan`). Follow the rule now, even though nothing enforces it yet. Residual risks: [ADR-0005](docs/adr/0005-secrets-catalog-auth-and-storage-credentials.md).
-- **Cluster lock:** `secrets`, `deploy`, `undeploy`, `bootstrap` and `smoke-phase*` take `scripts/cluster-lock.sh`, a host-wide lock shared by all worktrees.
+- **Cluster lock, planned, not yet enforced (#18):** `secrets`, `deploy`, `undeploy`, `bootstrap` and `smoke-phase*` take `scripts/cluster-lock.sh`, a host-wide lock shared by all worktrees.
 - **PostToolUse on Edit and Write** lints the edited file. Fix what it reports before moving on.
 - **Stop and SubagentStop** run `make lint` and `make test`. You can't finish with failing checks, so fix them or explain why they can't pass.
 - CI (`.github/workflows/ci.yml`) runs the `lint` and `helm-template` checks. `main` is meant to be protected with both as required checks.
