@@ -33,12 +33,8 @@ jobs:
       - name: Install pinned toolchain from uv.lock
         run: uv sync --frozen
 
-      # lychee by exact version, sha256-verified (pins in mk/lint.mk).
-      - name: make install-lychee
-        run: |
-          make install-lychee INSTALL_DIR="$RUNNER_TEMP/bin"
-          echo "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"
-
+      # make lint fetches lychee by exact version into .tools/bin and checks
+      # its sha256 (tests/charts/ensure_tool.sh, pins in mk/lint.mk).
       - name: make lint
         run: make lint
 
@@ -58,16 +54,13 @@ jobs:
       - name: Install pinned toolchain from uv.lock
         run: uv sync --frozen
 
-      # jq and lychee by exact version, sha256-verified (pins in mk/lint.mk).
-      # $RUNNER_TEMP/bin goes first on PATH, ahead of the image's own jq;
-      # check-jq proves the pinned jq is the one the tests use.
-      - name: make install-jq install-lychee
-        run: |
-          make install-jq install-lychee INSTALL_DIR="$RUNNER_TEMP/bin"
-          echo "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"
-
-      - name: make check-jq
-        run: make check-jq
+      # jq and lychee by exact version, sha256-verified, into .tools/bin
+      # (tests/charts/ensure_tool.sh, pins in mk/lint.mk). The image's jq is
+      # a different version, so the pinned one is fetched, and make test puts
+      # .tools/bin first on PATH. make test would do this too; the separate
+      # step shows the versions in the log.
+      - name: make check-jq check-lychee
+        run: make check-jq check-lychee
 
       - name: make test
         run: make test

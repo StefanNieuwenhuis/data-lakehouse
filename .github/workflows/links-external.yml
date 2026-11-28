@@ -21,12 +21,8 @@ jobs:
         with:
           persist-credentials: false
 
-      # lychee by exact version, sha256-verified (pins in mk/lint.mk).
-      - name: make install-lychee
-        run: |
-          make install-lychee INSTALL_DIR="$RUNNER_TEMP/bin"
-          echo "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"
-
+      # Fetches lychee by exact version into .tools/bin and checks its sha256
+      # (tests/charts/ensure_tool.sh, pins in mk/lint.mk).
       - name: make lint-links-external
         env:
           # Read-only token, so lychee is not rate-limited on github.com links.
