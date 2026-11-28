@@ -26,10 +26,11 @@ CHAINED = [
     "true; {cmd}",
     "echo hi | {cmd}",
     "false || {cmd}",
+    "echo hi & {cmd}",
     "cd /tmp && echo ok; true | {cmd}",
     "echo start\n{cmd}",
     "(cd /tmp && {cmd})",
-]
+    "echo $({cmd})",
 
 
 class GuardTestCase(unittest.TestCase):
