@@ -32,9 +32,10 @@ fi
 
 here="$(cd "$(dirname "$0")" && pwd)"
 helm="$("$here/ensure_tool.sh" helm)"
+: "${KUBERNETES_VERSION:?}"
 if [ "$mode" = template ]; then
   kubeconform="$("$here/ensure_tool.sh" kubeconform)"
-  : "${KUBERNETES_VERSION:?}" "${K8S_SCHEMAS_SHA:?}" "${CRDS_CATALOG_SHA:?}" "${KUBECONFORM_CACHE:?}"
+  : "${K8S_SCHEMAS_SHA:?}" "${CRDS_CATALOG_SHA:?}" "${KUBECONFORM_CACHE:?}"
   mkdir -p "$KUBECONFORM_CACHE"
   # Same layout as kubeconform's built-in default, but pinned to a commit
   # instead of the moving master branch.
@@ -64,10 +65,10 @@ check_one() {
 
   if [ "$mode" = template ]; then
     echo "--> helm lint --strict: $label"
-    "$helm" lint --strict "$chart" ${vargs[@]+"${vargs[@]}"} || return 1
+    "$helm" lint --strict --kube-version "$KUBERNETES_VERSION" "$chart" ${vargs[@]+"${vargs[@]}"} || return 1
   fi
   echo "--> helm template: $label"
-  "$helm" template ci "$chart" ${vargs[@]+"${vargs[@]}"} >"$rendered" || return 1
+  "$helm" template ci "$chart" --kube-version "$KUBERNETES_VERSION" ${vargs[@]+"${vargs[@]}"} >"$rendered" || return 1
 
   if [ "$mode" = template ]; then
     echo "--> kubeconform -strict (Kubernetes $KUBERNETES_VERSION): $label"

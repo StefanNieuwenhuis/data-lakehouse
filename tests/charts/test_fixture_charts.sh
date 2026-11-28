@@ -76,7 +76,8 @@ expect crd_unknown_field_fails_helm_template template broken-crd-unknown-field f
 # AC: every values*.yaml is checked, not only values.yaml.
 expect dev_values_schema_error_fails_helm_template template broken-dev-values fail \
   "template check failed: $FIXTURES_DIR/broken-dev-values with values-dev.yaml" \
-  "FAILED for 1 chart/values combination(s)"
+  "FAILED for 1 chart/values combination(s)" \
+  "Deployment ci-web is invalid" "at '/spec/replicas': got string"
 
 # AC: missing schemas are errors, never skipped, so a kind without a schema fails.
 expect missing_schema_fails_helm_template template broken-missing-schema fail \
