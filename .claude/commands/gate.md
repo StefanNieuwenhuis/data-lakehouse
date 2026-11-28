@@ -9,7 +9,7 @@ Phase: $ARGUMENTS
 2. **Run the gate.** Run `make smoke-phase$ARGUMENTS`. If that target doesn't exist, say so and stop.
 3. **Report** in this format:
 
-```
+```text
 Gate phase $ARGUMENTS: PASS | FAIL
 Ran: <timestamp>, <git short sha>
 Checks: <passed>/<total>

@@ -23,10 +23,10 @@ CLAUDE.md requires every chart and image version to be pinned (never `latest`) a
 
 | Wrapper chart | Upstream chart | Chart version | App version | Repository |
 |---|---|---|---|---|
-| `charts/seaweedfs` | `seaweedfs/seaweedfs` | 4.55.0 | 4.55 | https://seaweedfs.github.io/seaweedfs/helm |
-| `charts/cnpg-operator` | `cnpg/cloudnative-pg` | 0.29.2 | 1.30.2 | https://cloudnative-pg.github.io/charts |
+| `charts/seaweedfs` | `seaweedfs/seaweedfs` | 4.55.0 | 4.55 | <https://seaweedfs.github.io/seaweedfs/helm> |
+| `charts/cnpg-operator` | `cnpg/cloudnative-pg` | 0.29.2 | 1.30.2 | <https://cloudnative-pg.github.io/charts> |
 | `charts/postgres` | none (in-repo templates for the CNPG `Cluster` and `Database` resources) | n/a | Postgres 17 (ADR-0004) | n/a |
-| `charts/lakekeeper` | `lakekeeper/lakekeeper` | 0.15.0 | 0.15.1 | https://lakekeeper.github.io/lakekeeper-charts |
+| `charts/lakekeeper` | `lakekeeper/lakekeeper` | 0.15.0 | 0.15.1 | <https://lakekeeper.github.io/lakekeeper-charts> |
 
 - In the Lakekeeper chart, the optional `postgresql` subchart (groundhog2k/postgres 1.6.9, default image `quay.io/lakekeeper/postgresql:15.4.0-debian-11-r45`, Bitnami-derived) is **disabled** in favour of CloudNativePG (ADR-0004). The optional `openfga` subchart (0.4.1) is **disabled**, since auth is `none` in Phase 1 (ADR-0005).
 

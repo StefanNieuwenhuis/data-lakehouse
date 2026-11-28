@@ -10,7 +10,7 @@ Give me a one-screen overview of where the project stands. This command is read-
 
 Present it like this:
 
-```
+```text
 ISSUES (open)
 #  phase  owner              title                       PR
 12 1      platform-engineer  Object store chart          #15

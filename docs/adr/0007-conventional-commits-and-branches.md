@@ -11,7 +11,7 @@ Accepted (issue #25). Enforcement in CI and issue forms follow in #26.
 - Issue titles, PR titles, commit messages and branch names have no shared format. Titles so far range from `make secrets: ...` to `Hooks: ...` to `Process docs: ...`, and branches are named after the worktree directory.
 - PRs are squash-merged, so the squash commit on `main` is the only commit that stays. Its message is set from the PR title. A consistent PR title gives a readable `main` history.
 - Several agents create issues, branches and PRs in parallel. A format they can follow without judgement, and that a check can verify, avoids drift between agents.
-- #26 adds CI checks for these names. Those checks need one machine-readable list of the allowed types and scopes.
+- \#26 adds CI checks for these names. Those checks need one machine-readable list of the allowed types and scopes.
 
 ## Decision
 

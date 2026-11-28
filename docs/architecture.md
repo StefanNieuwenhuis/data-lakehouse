@@ -8,7 +8,7 @@ Last updated: 2026-11-28 (Phase 1 planning, amended after the PR #14 review, aft
 
 A local data lakehouse on a single-node minikube cluster (profile `dev`, Apple Silicon, arm64, Calico CNI). Data is stored as Apache Iceberg tables in an S3-compatible object store. A REST catalog (Lakekeeper) tracks the tables, a query engine (Trino) reads and writes them, dbt transforms them, and Dagster orchestrates the pipelines. Phase 5 adds a semantic layer (Cube) and LangGraph chatbots. Workloads are split into one namespace per layer, all prefixed `lh-` (ADR-0006).
 
-```
+```text
  minikube profile dev (Calico)
 
  +-- lh-ops ------------------+     +-- lh-catalog ---------------------+
@@ -156,6 +156,7 @@ The top-level `Makefile` only includes one file per area (ADR-0006):
 **Cluster lock.** `scripts/cluster-lock.sh` (platform-engineer) is a host-wide file lock, shared by all worktrees. It is re-entrant within one make run, and a stale lock is taken over after a timeout (default 30 minutes). `secrets` (apply), `deploy`, `undeploy`, `bootstrap` and `smoke-phase1` all take it.
 
 **Hook rules** (`.claude/hooks/block_destructive.py`, test-engineer):
+
 - `helm uninstall` is allowed only with `-n lh-[a-z]+`;
 - `minikube delete` is allowed only for profile `spike`;
 - the secret-leak rules from ADR-0005 apply;
