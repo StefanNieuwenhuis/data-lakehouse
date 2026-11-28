@@ -1,0 +1,30 @@
+---
+# kube-linter config for `make lint-charts` (#2, ADR-0003). Owner: test-engineer.
+#
+# Only the requests/limits policy runs: every container and init container of
+# every workload (Pod, Deployment, StatefulSet, DaemonSet, Job, CronJob, ...)
+# must set CPU and memory in both resources.requests and resources.limits.
+#
+# kube-linter's built-in unset-cpu-requirements checks only CPU requests, and
+# unset-memory-requirements only memory limits. So these checks reuse the same
+# built-in templates with requirementsType "any" and a 0..0 bound: a request or
+# limit that is unset (read as 0) fails.
+checks:
+  doNotAutoAddDefaults: true
+customChecks:
+  - name: cpu-requests-and-limits
+    description: Every container sets resources.requests.cpu and resources.limits.cpu.
+    remediation: Set both resources.requests.cpu and resources.limits.cpu on the container.
+    template: cpu-requirements
+    params:
+      requirementsType: any
+      lowerBoundMillis: 0
+      upperBoundMillis: 0
+  - name: memory-requests-and-limits
+    description: Every container sets resources.requests.memory and resources.limits.memory.
+    remediation: Set both resources.requests.memory and resources.limits.memory on the container.
+    template: memory-requirements
+    params:
+      requirementsType: any
+      lowerBoundMB: 0
+      upperBoundMB: 0

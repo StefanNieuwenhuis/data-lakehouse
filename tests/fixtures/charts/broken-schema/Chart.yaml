@@ -1,0 +1,8 @@
+---
+# Test fixture for make test-charts (#2). Deployment with a string replicas; kubeconform must fail.
+apiVersion: v2
+name: broken-schema
+description: Deployment with a string replicas; kubeconform must fail.
+type: application
+version: 0.1.0
+appVersion: "1.0.0"

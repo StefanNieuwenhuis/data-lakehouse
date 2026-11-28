@@ -1,0 +1,8 @@
+---
+# Test fixture for make test-charts (#2). Valid chart; helm-template and lint-charts must pass.
+apiVersion: v2
+name: valid
+description: Valid chart; helm-template and lint-charts must pass.
+type: application
+version: 0.1.0
+appVersion: "1.0.0"

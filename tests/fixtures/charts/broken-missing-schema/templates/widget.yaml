@@ -1,0 +1,7 @@
+---
+apiVersion: example.invalid/v1
+kind: Widget
+metadata:
+  name: "{{ .Release.Name }}-widget"
+spec:
+  size: 1

@@ -1,0 +1,8 @@
+---
+# Test fixture for make test-charts (#2). CNPG Cluster with an unknown spec field; kubeconform must fail.
+apiVersion: v2
+name: broken-crd-unknown-field
+description: CNPG Cluster with an unknown spec field; kubeconform must fail.
+type: application
+version: 0.1.0
+appVersion: "1.0.0"

@@ -28,3 +28,9 @@ graphify-out/
 
 # Node packages for commitlint (tests/conventions/package-lock.json)
 node_modules/
+
+# Helm chart dependencies, rebuilt by `helm dependency build` (ADR-0003)
+charts/*/charts/*.tgz
+
+# Pinned binary tools and schema cache fetched by mk/helm.mk (#2)
+.tools/
