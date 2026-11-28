@@ -4,7 +4,7 @@ Date: 2026-11-28
 
 ## Status
 
-Accepted, amended after the PR #14 review. The namespace-per-layer layout is the **proposed default**. It replaces the earlier single `dev` namespace and applies unless the user decides otherwise while closing the PR #14 review.
+Accepted, amended after the PR #14 review. The namespace-per-layer layout is decided (PR #14 merged). It replaces the earlier single `dev` namespace.
 
 ## Context
 

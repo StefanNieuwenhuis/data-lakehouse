@@ -13,12 +13,12 @@ Present it like this:
 ```
 ISSUES (open)
 #  phase  owner              title                       PR
-12 1      platform-engineer  MinIO chart                 #15
+12 1      platform-engineer  Object store chart          #15
 ...
 
 PRS (open)
 #  issue  checks  verdict           title
-15 #12    pass    REQUEST CHANGES   Add MinIO chart
+15 #12    pass    REQUEST CHANGES   Add object store chart
 ...
 
 NEXT
