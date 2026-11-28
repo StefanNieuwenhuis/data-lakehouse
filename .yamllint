@@ -1,0 +1,18 @@
+---
+# yamllint config for the whole repo. Used by `make lint` (yamllint -s .)
+# and by the PostToolUse hook (yamllint -s <file>, run from the repo root).
+extends: default
+
+ignore: |
+  .venv/
+  # Helm templates are Go templates, not YAML; `helm lint` covers them (#2).
+  charts/*/templates/
+  # Downloaded chart dependencies (gitignored, rebuilt by `helm dependency build`).
+  charts/*/charts/
+
+rules:
+  # GitHub Actions uses the `on:` key, which YAML 1.1 reads as a boolean.
+  truthy:
+    check-keys: false
+  line-length:
+    max: 120

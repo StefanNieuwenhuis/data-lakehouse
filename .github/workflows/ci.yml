@@ -1,3 +1,4 @@
+---
 name: ci
 
 on:
@@ -12,56 +13,42 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+# CI only calls make targets (ADR-0003). Every action is pinned to a full
+# commit SHA, with its release tag in the trailing comment.
 jobs:
   lint:
     name: lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
-          python-version: "3.12"
+          persist-credentials: false
 
-      - name: Install linters
-        run: pip install yamllint ruff sqlfluff
+      - uses: astral-sh/setup-uv@1db35dd8eee11c5894872e0b383ae6c406cf738d  # v10.4.0
+        with:
+          # Keep in sync with [tool.uv] required-version in pyproject.toml.
+          version: "0.11.6"
+
+      - name: Install pinned toolchain from uv.lock
+        run: uv sync --frozen
 
       - name: make lint
         run: make lint
+
+      - name: make test
+        run: make test
 
   helm-template:
     name: helm-template
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
 
-      - uses: azure/setup-helm@v4
+      - uses: azure/setup-helm@2f5e7bc67f1f9972ab16657bb795f36d8f04de0e  # v5.1.0
         with:
           version: v4.3.1  # keep in sync with the local Helm version
 
-      - name: Lint and render every chart
-        shell: bash
-        run: |
-          set -euo pipefail
-          shopt -s nullglob
-          charts=(charts/*/Chart.yaml)
-          if [ ${#charts[@]} -eq 0 ]; then
-            echo "::notice::No charts in charts/ yet, nothing to template."
-            exit 0
-          fi
-          for chart_yaml in "${charts[@]}"; do
-            chart=$(dirname "$chart_yaml")
-            echo "::group::$chart"
-            if grep -q '^dependencies:' "$chart_yaml"; then
-              helm dependency build "$chart"
-            fi
-            helm lint "$chart"
-            helm template ci "$chart" > /dev/null
-            # Also render each environment overlay, e.g. values-dev.yaml.
-            for values in "$chart"/values-*.yaml; do
-              echo "rendering with $values"
-              helm lint "$chart" -f "$values"
-              helm template ci "$chart" -f "$values" > /dev/null
-            done
-            echo "::endgroup::"
-          done
+      - name: make helm-template
+        run: make helm-template

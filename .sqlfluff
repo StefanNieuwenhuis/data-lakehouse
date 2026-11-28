@@ -1,0 +1,6 @@
+# Root sqlfluff config. `make lint` runs `sqlfluff lint .` from the repo root,
+# and the PostToolUse hook runs sqlfluff from the edited file's directory;
+# both pick up the nearest .sqlfluff, so this file is the fallback for the repo.
+# A dbt project may add its own .sqlfluff (for example with the dbt templater).
+[sqlfluff]
+dialect = trino
