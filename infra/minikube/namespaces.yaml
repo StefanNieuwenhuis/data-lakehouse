@@ -1,0 +1,27 @@
+---
+# Phase 1 namespaces, one per layer (ADR-0006). Applied by `make cluster-up`.
+# No LimitRange on purpose: a pod without limits must be rejected by the
+# ResourceQuota in quotas.yaml, not silently given defaults.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: lh-storage
+  labels:
+    app.kubernetes.io/part-of: lakehouse
+    lakehouse.io/layer: storage
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: lh-catalog
+  labels:
+    app.kubernetes.io/part-of: lakehouse
+    lakehouse.io/layer: catalog
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: lh-ops
+  labels:
+    app.kubernetes.io/part-of: lakehouse
+    lakehouse.io/layer: ops
