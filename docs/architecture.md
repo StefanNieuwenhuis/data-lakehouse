@@ -196,7 +196,6 @@ Each phase ends with a gate: `make smoke-phaseN` passes against a freshly deploy
 
 ## Open items
 
-- The namespace-per-layer layout is the proposed default (ADR-0006), pending the user's close of the PR #14 review.
 - ADR-0002 and ADR-0005 are conditional on the object-store spike (S3 compatibility and remote signing via `FsspecFileIO` with SeaweedFS).
 - With Docker Desktop at 28 GB, the `spike` profile (4 GiB) and `dev` (24 GiB) can't run together. The spike must finish first, unless the user raises Docker Desktop to 36 GB or more.
 - Ports in the network policy matrix marked "verify" (CNPG webhook and status port, Lakekeeper and SeaweedFS ports, the minikube apiserver port) are confirmed in issue 17.
