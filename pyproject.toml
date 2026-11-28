@@ -1,0 +1,40 @@
+[project]
+name = "lakehouse"
+version = "0.0.0"
+description = "Local data lakehouse on minikube: lint and test toolchain."
+readme = "README.md"
+requires-python = "==3.12.*"
+dependencies = []
+
+[dependency-groups]
+# Exact pins (ADR-0003). Bump deliberately and commit the regenerated uv.lock.
+dev = [
+    "pytest==9.2.0",
+    "ruff==0.17.6",
+    "sqlfluff==4.5.0",
+    "yamllint==1.38.0",
+]
+
+[tool.uv]
+# Not an installable package; this project only pins the toolchain.
+package = false
+# Keep in sync with the `version:` of astral-sh/setup-uv in .github/workflows/ci.yml.
+required-version = "==0.11.6"
+
+[tool.ruff]
+target-version = "py312"
+
+[tool.ruff.lint.per-file-ignores]
+# The Claude Code hooks are user-owned guardrails, and issue #1 forbids changes
+# under .claude/. They predate ruff 0.17's larger default rule set. Only the four
+# rules they currently break are ignored there; every other default rule still
+# applies. Remove this once the hooks are fixed.
+".claude/**" = ["BLE001", "EXE001", "PLW1510", "S110"]
+
+[tool.ruff.format]
+# Same reason: reformatting the hooks would be a change under .claude/.
+exclude = [".claude/**"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests", ".claude/hooks/tests"]
+addopts = ["-ra", "--strict-markers", "--strict-config"]
