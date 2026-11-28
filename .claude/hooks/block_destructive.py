@@ -158,7 +158,7 @@ def current_branch(cwd):
         capture_output=True,
         text=True,
         timeout=5,
-        check=False,
+check=True,
     ).stdout.strip()
 
 
