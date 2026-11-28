@@ -9,7 +9,14 @@ dependencies = []
 [dependency-groups]
 # Exact pins (ADR-0003). Bump deliberately and commit the regenerated uv.lock.
 dev = [
+    "actionlint-py==1.7.12.25",
+    "check-jsonschema==0.39.0",
+    "conventional-pre-commit==4.5.0",
+    # Node and npm for commitlint (tests/conventions/package-lock.json).
+    "nodejs-wheel==24.19.0",
+    "pymarkdownlnt==0.9.42",
     "pytest==9.2.0",
+    "pyyaml==6.0.4",
     "ruff==0.17.6",
     "shellcheck-py==0.11.0.1",
     "sqlfluff==4.5.0",
@@ -39,3 +46,16 @@ exclude = [".claude/**"]
 [tool.pytest.ini_options]
 testpaths = ["tests", ".claude/hooks/tests"]
 addopts = ["-ra", "--strict-markers", "--strict-config"]
+
+[tool.pymarkdown]
+# Markdown lint (pymarkdownlnt), run by `make lint-markdown`. Every rule is on
+# except the ones listed here, each with its reason.
+# Agent and slash-command files start with YAML front matter (Claude Code reads
+# it). Without this extension the front matter is parsed as Markdown.
+extensions.front-matter.enabled = true
+# MD013 (line-length): off. The docs keep one paragraph or list item per line,
+# so diffs follow sentences; hard-wrapping at 80 columns would rewrap every doc.
+plugins.md013.enabled = false
+# MD041 (first-line-h1): stays on. Agent and slash-command files are prompts
+# whose title is the front-matter `description`, so that counts as the title.
+plugins.md041.front_matter_title = "description"

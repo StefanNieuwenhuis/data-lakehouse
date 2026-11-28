@@ -9,6 +9,8 @@ ignore: |
   charts/*/templates/
   # Downloaded chart dependencies (gitignored, rebuilt by `helm dependency build`).
   charts/*/charts/
+  # npm packages for commitlint (gitignored, rebuilt by `make node-deps`).
+  node_modules/
 
 rules:
   # GitHub Actions uses the `on:` key, which YAML 1.1 reads as a boolean.

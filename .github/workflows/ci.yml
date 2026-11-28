@@ -14,11 +14,12 @@ concurrency:
   cancel-in-progress: true
 
 # CI only calls make targets (ADR-0003). Every action is pinned to a full
-# commit SHA, with its release tag in the trailing comment.
+# commit SHA, with its release tag in the trailing comment. Runner images are
+# pinned too (never ubuntu-latest). Each check has its own job.
 jobs:
   lint:
     name: lint
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
@@ -32,15 +33,48 @@ jobs:
       - name: Install pinned toolchain from uv.lock
         run: uv sync --frozen
 
+      # lychee by exact version, sha256-verified (pins in mk/lint.mk).
+      - name: make install-lychee
+        run: |
+          make install-lychee INSTALL_DIR="$RUNNER_TEMP/bin"
+          echo "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"
+
       - name: make lint
         run: make lint
+
+  test:
+    name: test
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: astral-sh/setup-uv@1db35dd8eee11c5894872e0b383ae6c406cf738d  # v10.4.0
+        with:
+          # Keep in sync with [tool.uv] required-version in pyproject.toml.
+          version: "0.11.6"
+
+      - name: Install pinned toolchain from uv.lock
+        run: uv sync --frozen
+
+      # jq and lychee by exact version, sha256-verified (pins in mk/lint.mk).
+      # $RUNNER_TEMP/bin goes first on PATH, ahead of the image's own jq;
+      # check-jq proves the pinned jq is the one the tests use.
+      - name: make install-jq install-lychee
+        run: |
+          make install-jq install-lychee INSTALL_DIR="$RUNNER_TEMP/bin"
+          echo "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"
+
+      - name: make check-jq
+        run: make check-jq
 
       - name: make test
         run: make test
 
   helm-template:
     name: helm-template
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
